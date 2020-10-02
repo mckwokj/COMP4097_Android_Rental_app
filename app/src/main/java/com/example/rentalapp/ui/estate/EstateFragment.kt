@@ -9,8 +9,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.rentalapp.R
+import com.example.rentalapp.data.AppDatabase
 import com.example.rentalapp.data.Home
 import com.example.rentalapp.ui.estate.dummy.DummyContent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * A fragment representing a list of Items.
@@ -41,14 +45,22 @@ class EstateFragment : Fragment() {
                     else -> GridLayoutManager(context, columnCount)
                 }
 
-                val estateId = resources.getStringArray((R.array.homeId))
-                val estateText = resources.getStringArray(R.array.homeEstate)
-                val estate = mutableListOf<Home>()
+//                val estateId = resources.getStringArray((R.array.homeId))
+//                val estateText = resources.getStringArray(R.array.homeEstate)
+//                val estate = mutableListOf<Home>()
+//
+//                for (i in 0..(estateText.size-1)){
+//                    estate.add(Home(estateId[i], null, null, estateText[i], null))
+//                }
 
-                for (i in 0..(estateText.size-1)){
-                    estate.add(Home(estateId[i], null, null, estateText[i], null))
+                CoroutineScope(Dispatchers.IO).launch{
+                    val dao = AppDatabase.getInstace(requireContext()).apartmentDao()
+                    val estates = dao.findAllEstateName()
+
+                    CoroutineScope(Dispatchers.Main).launch{
+                        adapter = EstateRecyclerViewAdapter(estates)
+                    }
                 }
-                adapter = EstateRecyclerViewAdapter(estate)
             }
         }
         return view

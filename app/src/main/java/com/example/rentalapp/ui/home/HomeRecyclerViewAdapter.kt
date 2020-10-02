@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.navigation.findNavController
 import com.example.rentalapp.R
+import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.Choice
 import com.example.rentalapp.data.Home
 import com.example.rentalapp.ui.choice.ChoiceFragment
@@ -23,7 +24,7 @@ import com.squareup.picasso.Picasso
  * TODO: Replace the implementation with code for your data type.
  */
 class HomeRecyclerViewAdapter(
-    private val values: List<Home>
+    private val values: List<Apartment>
 ) : RecyclerView.Adapter<HomeRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -35,17 +36,15 @@ class HomeRecyclerViewAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
 
+        Picasso.get().load(item.img).into(holder.homeImage)
 
+        val id: Int = item.id
 
-        Picasso.get().load(item.image).into(holder.homeImage)
-//        Log.d("Image url", item.image)
-        val id: String = item.id
-
-        holder.id = id
+        holder.id = id.toString()
 
         holder.homeTitle.text = item.title
         holder.homeEstate.text = item.estate
-        holder.homePrice.text = "Rent: $"+item.price
+        holder.homePrice.text = "Rent: $"+item.rent
     }
 
     override fun getItemCount(): Int = values.size
@@ -57,7 +56,6 @@ class HomeRecyclerViewAdapter(
         val homePrice: TextView = view.findViewById(R.id.priceText)
 
         var id: String = ""
-
 
         init {
             view.setOnClickListener{

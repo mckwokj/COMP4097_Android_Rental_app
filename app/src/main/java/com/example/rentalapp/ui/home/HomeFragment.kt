@@ -9,8 +9,15 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.rentalapp.R
+import com.example.rentalapp.data.AppDatabase
 import com.example.rentalapp.data.Home
+import com.example.rentalapp.data.SampleData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 //import com.example.rentalapp.ui.home.dummy.DummyContent
 
 /**
@@ -32,7 +39,15 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_home_list, container, false)
+        val view = inflater.inflate(R.layout.fragment_home_list, null, false) as RecyclerView
+
+        val swipeLayout = SwipeRefreshLayout(requireContext())
+        swipeLayout.addView(view)
+        swipeLayout.setOnRefreshListener {
+            swipeLayout.isRefreshing = true
+//                ...
+            swipeLayout.isRefreshing = false
+        }
 
         // Set the adapter
         if (view is RecyclerView) {
@@ -41,24 +56,21 @@ class HomeFragment : Fragment() {
                     columnCount <= 1 -> LinearLayoutManager(context)
                     else -> GridLayoutManager(context, columnCount)
                 }
-                val homeId = resources.getStringArray(R.array.homeId)
-                val homeImage = resources.getStringArray(R.array.homeImage)
-                val homeTitle = resources.getStringArray(R.array.homeTitle)
-                val homeEstate = resources.getStringArray(R.array.homeEstate)
-                val homePrice = resources.getStringArray(R.array.homePrice)
 
-                val home = mutableListOf<Home>()
+                CoroutineScope(Dispatchers.IO).launch{
+                    val dao = AppDatabase.getInstace(context).apartmentDao()
+                    val apartments = dao.findAllApartments()
 
-                for (i in 0..(homePrice.size - 1)) {
-                    home.add(
-                        Home(homeId[i], homeImage[i], homeTitle[i], homeEstate[i], homePrice[i])
-                    )
+                    CoroutineScope(Dispatchers.Main).launch{
+                        adapter = HomeRecyclerViewAdapter(apartments)
+                    }
                 }
-                    adapter = HomeRecyclerViewAdapter(home)
+//                    adapter = HomeRecyclerViewAdapter(SampleData.APARTMENT)
 
             }
         }
-        return view
+
+        return swipeLayout
     }
 
     companion object {

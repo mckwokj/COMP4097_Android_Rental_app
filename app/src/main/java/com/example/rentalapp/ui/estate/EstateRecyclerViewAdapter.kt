@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.example.rentalapp.R
+import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.Home
 
 import com.example.rentalapp.ui.estate.dummy.DummyContent.DummyItem
@@ -15,7 +16,7 @@ import com.example.rentalapp.ui.estate.dummy.DummyContent.DummyItem
  * TODO: Replace the implementation with code for your data type.
  */
 class EstateRecyclerViewAdapter(
-    private val values: List<Home>
+    private val values: List<String>
 ) : RecyclerView.Adapter<EstateRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -26,7 +27,7 @@ class EstateRecyclerViewAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
-        holder.estateText.text = item.estate
+        holder.estateText.text = item
     }
 
     override fun getItemCount(): Int = values.size

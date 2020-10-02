@@ -12,7 +12,12 @@ import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.navigation.findNavController
 import com.example.rentalapp.R
+import com.example.rentalapp.data.AppDatabase
+import com.example.rentalapp.data.SampleData
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -44,52 +49,56 @@ class ChoiceFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_choice, container, false)
 
-        val homeId = resources.getStringArray(R.array.homeId)
-        val homeImage = resources.getStringArray(R.array.homeImage)
-        val homeTitle = resources.getStringArray(R.array.homeTitle)
-        val homeEstate = resources.getStringArray(R.array.homeEstate)
-        val homePrice = resources.getStringArray(R.array.homePrice)
-        val homeBedroom = resources.getStringArray(R.array.homeBedroom)
-        val homeTenants = resources.getStringArray(R.array.homeTenants)
-        val homeArea = resources.getStringArray(R.array.homeArea)
-        val latArr = resources.getStringArray(R.array.latitude)
-        val longArr = resources.getStringArray(R.array.longitude)
-
-        val choiceImage: ImageView = view.findViewById(R.id.choiceHomeImage)
-        val choiceTitle: TextView = view.findViewById(R.id.choiceTitleText)
-        val choiceFirst: TextView = view.findViewById(R.id.firstLineText)
-        val choiceSecond: TextView = view.findViewById(R.id.secondLineText)
+        val apartmentImage: ImageView = view.findViewById(R.id.choiceHomeImage)
+        val apartmentTitle: TextView = view.findViewById(R.id.choiceTitleText)
+        val apartmentFirst: TextView = view.findViewById(R.id.firstLineText)
+        val apartmentSecond: TextView = view.findViewById(R.id.secondLineText)
         val moveInBtn: Button = view.findViewById(R.id.moveInButton)
         val addressBtn: Button = view.findViewById(R.id.addressButton)
 
 
         val id = arguments?.getString("id")
 
-        var lat: Double? = null
-        var long: Double? = null
 
-        var target: Int? = null
+        CoroutineScope(Dispatchers.IO).launch{
+//            val apartmentInfo = SampleData.APARTMENT.filter{
+//                it.id.toString() == id
+//            }
+            val dao = AppDatabase.getInstace(requireContext()).apartmentDao()
+            val apartmentInfo = dao.findApartmentByID(id?.toInt()!!)
 
-        for (idx in 0..homeId.size-1) {
-            if (homeId[idx] == id) {
-                Picasso.get().load(homeImage[idx]).into(choiceImage)
-                choiceTitle.text = homeTitle[idx]
-                choiceFirst.text = "Estate: ${homeEstate[idx]}, Bedrooms: ${homeBedroom[idx]}"
-                choiceSecond.text = "Rent: $${homePrice[idx]}, Tenants: ${homeTenants[idx]}, Area: ${homeArea[idx]}"
+            CoroutineScope(Dispatchers.Main).launch{
+                Picasso.get().load(apartmentInfo.img).into(apartmentImage)
+                apartmentTitle.text = apartmentInfo.title
+                apartmentFirst.text = "Estate: ${apartmentInfo.estate}, " +
+                        "Bedrooms: ${apartmentInfo.bedrooms}"
+                apartmentSecond.text =  "Rent: $${apartmentInfo.rent}, " +
+                        "Tenants: ${apartmentInfo.tenants}, Area: ${apartmentInfo.area}"
 
-                lat = latArr[idx].toDouble()
-                long = longArr[idx].toDouble()
-
-                target = idx
-
-                break
+                addressBtn.setOnClickListener{
+                    it.findNavController().navigate(R.id.action_choiceFragment_to_mapsFragment,
+                        bundleOf(
+                            Pair("latitude", apartmentInfo.latitude),
+                            Pair("longitude", apartmentInfo.longitude),
+                            Pair("estate", apartmentInfo.estate)))
+                }
             }
         }
 
-        addressBtn.setOnClickListener{
-            it.findNavController().navigate(R.id.action_choiceFragment_to_mapsFragment,
-            bundleOf(Pair("latitude", lat), Pair("longitude", long), Pair("estate", homeEstate[target!!])))
-        }
+//        Picasso.get().load(apartmentInfo[0].img).into(apartmentImage)
+//        apartmentTitle.text = apartmentInfo[0].title
+//        apartmentFirst.text = "Estate: ${apartmentInfo[0].estate}, " +
+//                "Bedrooms: ${apartmentInfo[0].bedrooms}"
+//        apartmentSecond.text =  "Rent: $${apartmentInfo[0].rent}, " +
+//                "Tenants: ${apartmentInfo[0].tenants}, Area: ${apartmentInfo[0].area}"
+//
+//        addressBtn.setOnClickListener{
+//            it.findNavController().navigate(R.id.action_choiceFragment_to_mapsFragment,
+//            bundleOf(
+//                Pair("latitude", apartmentInfo[0].latitude),
+//                Pair("longitude", apartmentInfo[0].longitude),
+//                Pair("estate", apartmentInfo[0].estate)))
+//        }
 
         return view
     }

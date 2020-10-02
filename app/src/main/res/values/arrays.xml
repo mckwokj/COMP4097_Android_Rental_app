@@ -1,0 +1,44 @@
+<resources>
+    <!-- Reply Preference -->
+
+    <string-array name="homeId">
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+    <string-array name="homeImage">
+        <item>https://hintegro.com/wp-content/uploads/2017/08/ken_025016_PSD.jpg</item>
+        <item>https://www.nelson-design.com.hk/wp-content/uploads/2016/02/3-22-cam-1_final.jpg</item>
+    </string-array>
+    <string-array name="homeTitle">
+        <item>Best Price for Lease</item>
+        <item>Sea View</item>
+    </string-array>
+    <string-array name="homeEstate">
+        <item>Festival City</item>
+        <item>LOHAS Park</item>
+    </string-array>
+    <string-array name="homePrice">
+        <item>21000</item>
+        <item>35000</item>
+    </string-array>
+    <string-array name="homeBedroom">
+        <item>3</item>
+        <item>5</item>
+    </string-array>
+    <string-array name="homeTenants">
+        <item>5</item>
+        <item>10</item>
+    </string-array>
+    <string-array name="homeArea">
+        <item>700</item>
+        <item>1280</item>
+    </string-array>
+    <string-array name="latitude">
+        <item>22.370278</item>
+        <item>22.294482</item>
+    </string-array>
+    <string-array name="longitude">
+        <item>114.175704</item>
+        <item>114.270255</item>
+    </string-array>
+</resources>

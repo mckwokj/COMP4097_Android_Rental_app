@@ -1,31 +1,78 @@
 package com.example.rentalapp.ui.home
 
 import android.os.Bundle
+import android.util.Log
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import com.example.rentalapp.R
+import com.example.rentalapp.data.Home
+//import com.example.rentalapp.ui.home.dummy.DummyContent
 
+/**
+ * A fragment representing a list of Items.
+ */
 class HomeFragment : Fragment() {
 
-    private lateinit var homeViewModel: HomeViewModel
+    private var columnCount = 1
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        arguments?.let {
+            columnCount = it.getInt(ARG_COLUMN_COUNT)
+        }
+    }
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? {
-        homeViewModel =
-                ViewModelProviders.of(this).get(HomeViewModel::class.java)
-        val root = inflater.inflate(R.layout.fragment_home, container, false)
-        val textView: TextView = root.findViewById(R.id.text_home)
-        homeViewModel.text.observe(viewLifecycleOwner, Observer {
-            textView.text = it
-        })
-        return root
+        val view = inflater.inflate(R.layout.fragment_home_list, container, false)
+
+        // Set the adapter
+        if (view is RecyclerView) {
+            with(view) {
+                layoutManager = when {
+                    columnCount <= 1 -> LinearLayoutManager(context)
+                    else -> GridLayoutManager(context, columnCount)
+                }
+                val homeId = resources.getStringArray(R.array.homeId)
+                val homeImage = resources.getStringArray(R.array.homeImage)
+                val homeTitle = resources.getStringArray(R.array.homeTitle)
+                val homeEstate = resources.getStringArray(R.array.homeEstate)
+                val homePrice = resources.getStringArray(R.array.homePrice)
+
+                val home = mutableListOf<Home>()
+
+                for (i in 0..(homePrice.size - 1)) {
+                    home.add(
+                        Home(homeId[i], homeImage[i], homeTitle[i], homeEstate[i], homePrice[i])
+                    )
+                }
+                    adapter = HomeRecyclerViewAdapter(home)
+
+            }
+        }
+        return view
+    }
+
+    companion object {
+
+        // TODO: Customize parameter argument names
+        const val ARG_COLUMN_COUNT = "column-count"
+
+        // TODO: Customize parameter initialization
+        @JvmStatic
+        fun newInstance(columnCount: Int) =
+            HomeFragment().apply {
+                arguments = Bundle().apply {
+                    putInt(ARG_COLUMN_COUNT, columnCount)
+                }
+            }
     }
 }

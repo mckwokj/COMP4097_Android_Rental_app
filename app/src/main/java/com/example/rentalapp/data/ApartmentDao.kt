@@ -12,11 +12,18 @@ interface ApartmentDao {
     suspend fun findApartmentByID(id: Int): Apartment
     @Query("Select * from apartment where estate = :estate")
     suspend fun findApartmentsByEstateName(estate: String): List<Apartment>
-    // changes needed for selection criteria
-    @Query("Select * from apartment where bedrooms = :bedrooms")
-    suspend fun findApartmentsByBedroomNum(bedrooms: Int): List<Apartment>
+    @Query("Select * from apartment where bedrooms < :bedrooms")
+    suspend fun findApartmentsLTBedroomNum(bedrooms: Int): List<Apartment>
+    @Query("Select * from apartment where bedrooms > :bedrooms")
+    suspend fun findApartmentsGTBedroomNum(bedrooms: Int): List<Apartment>
     @Query("Select distinct estate from apartment")
     suspend fun findAllEstateName(): List<String>
+    @Query("Update apartment set occupied = :occupied where id = :id")
+    suspend fun updateOccupiedByID(id: Int, occupied: Boolean)
+    @Query("Update apartment set latitude = :latitude, longitude = :longitude where id=:id")
+    suspend fun updateLatLong(id: Int, latitude: Double, longitude: Double)
+//    @Query("Select latitude, longitude from apartment where id = :id")
+//    suspend fun getLatLongById(id: Int): List<Double>
     @Delete
     suspend fun delete(vararg apartment: Apartment)
     @Update

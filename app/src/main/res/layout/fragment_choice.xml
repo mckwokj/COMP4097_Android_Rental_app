@@ -3,22 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    tools:context=".ui.choice.ChoiceFragment" >
+    tools:context=".ui.choice.ChoiceFragment">
 
     <ImageView
         android:id="@+id/choiceHomeImage"
         android:layout_width="match_parent"
-        android:layout_height="420dp"
-        android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_baseline_cloud_download_96" />
+        android:layout_height="300dp"
+        android:scaleType="centerCrop" />
 
     <TextView
         android:id="@+id/choiceTitleText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         android:textColor="#000000" />
 
@@ -26,14 +24,12 @@
         android:id="@+id/firstLineText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:textColor="#000000" />
 
     <TextView
         android:id="@+id/secondLineText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView"
         android:textColor="#000000" />
 
     <LinearLayout
@@ -56,6 +52,7 @@
             android:layout_weight="1"
             android:text="Address"
             android:textAllCaps="false" />
+
     </LinearLayout>
 
 </LinearLayout>

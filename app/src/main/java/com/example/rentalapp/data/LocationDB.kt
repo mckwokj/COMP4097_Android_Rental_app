@@ -1,25 +1,22 @@
 package com.example.rentalapp.data
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = arrayOf(Apartment::class, Location::class), version = 1)
-abstract class AppDatabase: RoomDatabase() {
-
-    abstract fun apartmentDao(): ApartmentDao
+@Database(entities = arrayOf(Location::class), version = 1)
+abstract class LocationDB: RoomDatabase() {
     abstract fun locationDao(): LocationDao
 
     companion object{
-        private var instance: AppDatabase? = null
-        suspend fun getInstance(context: Context): AppDatabase{
+        private var instance: LocationDB? = null
+        suspend fun getInstance(context: Context): LocationDB{
             if (instance != null)
                 return instance!!
 
             // build an instance
-            instance = Room.databaseBuilder(context, AppDatabase::class.java,
+            instance = Room.databaseBuilder(context, LocationDB::class.java,
                 "rentalapp").build()
 
 //            initDB()
@@ -33,4 +30,6 @@ abstract class AppDatabase: RoomDatabase() {
 //            SampleData.APARTMENT.forEach{instance?.apartmentDao()?.insert(it)}
         }
     }
+
+
 }

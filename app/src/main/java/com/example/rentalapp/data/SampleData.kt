@@ -13,6 +13,14 @@ object SampleData {
         Apartment(3, "Sea View", "LOHAS Park", 5,
             35000, 10, 1280, false,
             22.294482, 114.270255,
+            "https://www.nelson-design.com.hk/wp-content/uploads/2016/02/3-22-cam-1_final.jpg"),
+        Apartment(4, "Sea View", "LOHAS Park", 1,
+            35000, 10, 1280, false,
+            22.294482, 114.270255,
+            "https://www.nelson-design.com.hk/wp-content/uploads/2016/02/3-22-cam-1_final.jpg"),
+        Apartment(5, "Sea View", "LOHAS Park", 2,
+            35000, 10, 1280, false,
+            22.294482, 114.270255,
             "https://www.nelson-design.com.hk/wp-content/uploads/2016/02/3-22-cam-1_final.jpg")
 
     )

@@ -7,16 +7,16 @@ import androidx.room.PrimaryKey
 data class Apartment(
     @PrimaryKey
     val id: Int,
-    val title: String,
+    val property_title: String,
     val estate: String,
     val bedrooms: Int,
     val rent: Int,
-    val tenants: Int,
-    val area: Int,
-    var moveIn: Boolean,
-    val latitude: Double,
-    val longitude: Double,
-    val img: String
+    val expected_tenants: Int,
+    val gross_area: Int,
+    var occupied: Boolean,
+    val latitude: Double?,
+    val longitude: Double?,
+    val image_URL: String
 )
 {
 }

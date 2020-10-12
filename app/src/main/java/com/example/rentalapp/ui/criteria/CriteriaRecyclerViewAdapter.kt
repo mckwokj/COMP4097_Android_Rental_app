@@ -1,6 +1,5 @@
-package com.example.rentalapp.ui.estate
+package com.example.rentalapp.ui.criteria
 
-import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -10,40 +9,42 @@ import androidx.core.os.bundleOf
 import androidx.navigation.findNavController
 import com.example.rentalapp.R
 import com.example.rentalapp.data.Apartment
-import com.example.rentalapp.data.Home
 
-import com.example.rentalapp.ui.estate.dummy.DummyContent.DummyItem
+import com.example.rentalapp.ui.criteria.dummy.DummyContent.DummyItem
 
 /**
  * [RecyclerView.Adapter] that can display a [DummyItem].
  * TODO: Replace the implementation with code for your data type.
  */
-class EstateRecyclerViewAdapter(
-    private val values: List<String>
-) : RecyclerView.Adapter<EstateRecyclerViewAdapter.ViewHolder>() {
+class CriteriaRecyclerViewAdapter(
+    private val values: List<Apartment>
+) : RecyclerView.Adapter<CriteriaRecyclerViewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.fragment_estate_item, parent, false)
+            .inflate(R.layout.fragment_criteria_item, parent, false)
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = values[position]
-        holder.estateText.text = item
+        holder.titleTextView.text = item.property_title
+        holder.estateTextView.text = item.estate
+        holder.id = item.id
+
     }
 
     override fun getItemCount(): Int = values.size
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val estateText: TextView = view.findViewById(R.id.estateText)
+        val titleTextView: TextView = view.findViewById(R.id.criterialTitle)
+        val estateTextView: TextView = view.findViewById(R.id.criterialEstate)
+        var id = 0
 
         init {
-            estateText.setOnClickListener{
-                it.findNavController().navigate(R.id.action_estateFragment_to_criteriaFragment,
-                bundleOf(Pair("estate", estateText.text)))
-
-//                it.findNavController().navigate(R.id.action_estateFragment_to_criteriaFragment)
+            view.setOnClickListener{
+                it.findNavController().navigate(R.id.action_criteriaFragment_to_choiceFragment,
+                bundleOf(Pair("id", id.toString())))
             }
         }
 

@@ -1,19 +1,31 @@
 package com.example.rentalapp
 
-import androidx.fragment.app.Fragment
-
+import android.content.Context
+import android.location.Address
+import android.location.Geocoder
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
+import androidx.navigation.findNavController
+import com.example.rentalapp.data.AppDatabase
+import com.example.rentalapp.data.Location
 import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.io.IOException
+
 
 class MapsFragment : Fragment() {
 
@@ -28,22 +40,108 @@ class MapsFragment : Fragment() {
          * user has installed Google Play services and returned to the app.
          */
 
-        val locationData = arguments?.apply{
-            getDouble("latitude")
-            getDouble("longitude")
-            getString("estate")
-        }
 
-        if (locationData != null) {
-            val lat = locationData.getDouble("latitude")
-            val long = locationData.getDouble("longitude")
-            val estate = locationData.getString("estate")
+//        val locationData = arguments?.apply{
+//            getDouble("latitude")
+//            getDouble("longitude")
+//            getString("estate")
+//        }
 
-            val location = LatLng(lat, long)
-            googleMap.addMarker(MarkerOptions().position(location).title(estate))
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(location))
-            googleMap.moveCamera(CameraUpdateFactory.zoomTo(15F))
+        try {
+            val apartmentInfo = arguments?.apply {
+                getInt("id")
+                getString("estate")
+            }
+
+            if (apartmentInfo != null) {
+                val id = apartmentInfo?.getInt("id")
+                val estate = apartmentInfo?.getString("estate")
+//
+                CoroutineScope(Dispatchers.IO).launch {
+                val dao = AppDatabase.getInstance(requireContext()).locationDao()
+                var location = dao.findLocationByEstate(estate!!)
+                    val coordinate: LatLng
+
+                if (location != null) {
+                    coordinate = LatLng(location.latitude, location.longitude)
+                    Log.d("MapsFragment not null", coordinate.toString())
+                }
+                else {
+                    coordinate = getLocationFromAddress(
+                        requireContext(),
+                        estate + ", Hong Kong", id
+                    )!!
+
+                    Log.d("MapsFragment null", coordinate.toString())
+
+                    dao.insert(Location(estate, coordinate.latitude, coordinate.longitude))
+                }
+
+                    CoroutineScope(Dispatchers.Main).launch {
+                        googleMap.addMarker(MarkerOptions().position(coordinate).title(estate))
+                        googleMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
+                        googleMap.moveCamera(CameraUpdateFactory.zoomTo(15F))
+                    }
+//                }
+
+//                if (apartment.latitude == null) {
+//
+//                   addr = getLocationFromAddress(requireContext(),
+//                        estate + ", Hong Kong")!!
+//                    dao.updateLatLong(id, addr.latitude, addr.longitude)
+//                    Log.d("MapsFragmantSave", apartment.latitude.toString()+""+apartment.longitude.toString())
+//                } else {
+//                    Log.d("MapsFragmantLoadFromDB", apartment.latitude.toString()+""+apartment.longitude.toString())
+//                    addr = LatLng(apartment.latitude!!, apartment.longitude!!)
+//                }
+                }
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+//            view?.findNavController()?.navigate(R.id.action_mapsFragment_to_choiceFragment,
+//                bundleOf(Pair("id", id)))
         }
+    }
+
+    fun getLocationFromAddress(context: Context?, strAddress: String?, id: Int): LatLng? {
+        val coder = Geocoder(context)
+        val address: List<Address>?
+        var p1: LatLng? = null
+        try {
+            // May throw an IOException
+            address = coder.getFromLocationName(strAddress, 5)
+            if (address == null) {
+                return null
+            }
+            val location = address[0]
+            p1 = LatLng(location.latitude, location.longitude)
+        } catch (ex: IOException) {
+//            ex.printStackTrace()
+        }
+        return p1
+    }
+
+    fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                    return true
+                }
+            }
+        }
+        Log.i("Internet", "Network failure")
+        return false
     }
 
     override fun onCreateView(

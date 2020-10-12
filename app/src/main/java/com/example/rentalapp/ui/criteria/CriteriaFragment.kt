@@ -1,4 +1,4 @@
-package com.example.rentalapp.ui.estate
+package com.example.rentalapp.ui.criteria
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -9,8 +9,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.rentalapp.R
+import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.AppDatabase
-//import com.example.rentalapp.data.Home
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 /**
  * A fragment representing a list of Items.
  */
-class EstateFragment : Fragment() {
+class CriteriaFragment : Fragment() {
 
     private var columnCount = 1
 
@@ -34,7 +34,7 @@ class EstateFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_estate_list, container, false)
+        val view = inflater.inflate(R.layout.fragment_criteria_list, container, false)
 
         // Set the adapter
         if (view is RecyclerView) {
@@ -44,22 +44,26 @@ class EstateFragment : Fragment() {
                     else -> GridLayoutManager(context, columnCount)
                 }
 
-//                val estateId = resources.getStringArray((R.array.homeId))
-//                val estateText = resources.getStringArray(R.array.homeEstate)
-//                val estate = mutableListOf<Home>()
-//
-//                for (i in 0..(estateText.size-1)){
-//                    estate.add(Home(estateId[i], null, null, estateText[i], null))
-//                }
+                val estate = arguments?.getString("estate")
+                val apartments = arguments?.get("apartments") as List<Apartment>?
 
                 CoroutineScope(Dispatchers.IO).launch{
-                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-                    val estates = dao.findAllEstateName()
+                    val dao = AppDatabase.getInstance(context).apartmentDao()
 
-                    CoroutineScope(Dispatchers.Main).launch{
-                        adapter = EstateRecyclerViewAdapter(estates)
+                    if (apartments == null) {
+
+                        val apartments = dao.findApartmentsByEstateName(estate!!)
+                        CoroutineScope(Dispatchers.Main).launch{
+                            adapter = CriteriaRecyclerViewAdapter(apartments)
+                        }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch{
+                            adapter = CriteriaRecyclerViewAdapter(apartments)
+                        }
                     }
+
                 }
+
             }
         }
         return view
@@ -73,7 +77,7 @@ class EstateFragment : Fragment() {
         // TODO: Customize parameter initialization
         @JvmStatic
         fun newInstance(columnCount: Int) =
-            EstateFragment().apply {
+            CriteriaFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                 }

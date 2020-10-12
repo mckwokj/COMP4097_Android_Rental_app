@@ -18,16 +18,22 @@
         android:id="@+id/estateFragment"
         android:name="com.example.rentalapp.ui.estate.EstateFragment"
         android:label="Estate"
-        tools:layout="@layout/fragment_estate_list" />
-    <fragment
-        android:id="@+id/roomFragment"
-        android:name="com.example.rentalapp.ui.room.RoomFragment"
-        android:label="Rooms"
-        tools:layout="@layout/fragment_room_list" />
+        tools:layout="@layout/fragment_estate_list" >
+        <action
+            android:id="@+id/action_estateFragment_to_criteriaFragment"
+            app:destination="@id/criteriaFragment" />
+    </fragment>
     <fragment
         android:id="@+id/userFragment"
         android:name="com.example.rentalapp.ui.user.UserFragment"
-        android:label="User"/>
+        android:label="User">
+        <action
+            android:id="@+id/action_userFragment_to_loginFragment"
+            app:destination="@id/loginFragment" />
+        <action
+            android:id="@+id/action_userFragment_to_rentalFragment"
+            app:destination="@id/rentalFragment" />
+    </fragment>
     <fragment
         android:id="@+id/choiceFragment"
         android:name="com.example.rentalapp.ui.choice.ChoiceFragment"
@@ -42,4 +48,40 @@
         android:name="com.example.rentalapp.MapsFragment"
         android:label="Address"
         tools:layout="@layout/fragment_maps" />
+    <fragment
+        android:id="@+id/criteriaFragment"
+        android:name="com.example.rentalapp.ui.criteria.CriteriaFragment"
+        android:label="Result"
+        tools:layout="@layout/fragment_criteria_list" >
+        <action
+            android:id="@+id/action_criteriaFragment_to_choiceFragment"
+            app:destination="@id/choiceFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/roomFragment"
+        android:name="com.example.rentalapp.ui.room.RoomFragment"
+        android:label="Rooms"
+        tools:layout="@layout/fragment_room" >
+        <action
+            android:id="@+id/action_roomFragment_to_criteriaFragment"
+            app:destination="@id/criteriaFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.rentalapp.ui.login.LoginFragment"
+        android:label="Login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_userFragment"
+            app:destination="@id/userFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/rentalFragment"
+        android:name="com.example.rentalapp.ui.rental.RentalFragment"
+        android:label="My Rentals"
+        tools:layout="@layout/fragment_rental_list" >
+        <action
+            android:id="@+id/action_rentalFragment_to_choiceFragment"
+            app:destination="@id/choiceFragment" />
+    </fragment>
 </navigation>

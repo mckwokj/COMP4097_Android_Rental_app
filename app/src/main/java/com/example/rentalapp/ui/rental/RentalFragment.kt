@@ -1,6 +1,9 @@
-package com.example.rentalapp.ui.estate
+package com.example.rentalapp.ui.rental
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -9,16 +12,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.rentalapp.R
-import com.example.rentalapp.data.AppDatabase
-//import com.example.rentalapp.data.Home
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.rentalapp.data.Apartment
+import com.example.rentalapp.ui.rental.dummy.DummyContent
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 /**
  * A fragment representing a list of Items.
  */
-class EstateFragment : Fragment() {
+class RentalFragment : Fragment() {
 
     private var columnCount = 1
 
@@ -34,7 +36,14 @@ class EstateFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_estate_list, container, false)
+        val view = inflater.inflate(R.layout.fragment_rental_list, container, false)
+
+        val pref: SharedPreferences = context?.getSharedPreferences(
+            "userInfo",
+            Context.MODE_PRIVATE
+        )!!
+
+        val myRenalsJson = pref.getString("myRentalsJson", "")
 
         // Set the adapter
         if (view is RecyclerView) {
@@ -44,22 +53,13 @@ class EstateFragment : Fragment() {
                     else -> GridLayoutManager(context, columnCount)
                 }
 
-//                val estateId = resources.getStringArray((R.array.homeId))
-//                val estateText = resources.getStringArray(R.array.homeEstate)
-//                val estate = mutableListOf<Home>()
-//
-//                for (i in 0..(estateText.size-1)){
-//                    estate.add(Home(estateId[i], null, null, estateText[i], null))
-//                }
+                val apartment = Gson().fromJson<List<Apartment>>(myRenalsJson, object :
+                    TypeToken<List<Apartment>>() {}.type)
 
-                CoroutineScope(Dispatchers.IO).launch{
-                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-                    val estates = dao.findAllEstateName()
 
-                    CoroutineScope(Dispatchers.Main).launch{
-                        adapter = EstateRecyclerViewAdapter(estates)
-                    }
-                }
+                Log.d("RentalFragment", apartment.toString())
+
+                adapter = RentalRecyclerViewAdapter(apartment)
             }
         }
         return view
@@ -73,7 +73,7 @@ class EstateFragment : Fragment() {
         // TODO: Customize parameter initialization
         @JvmStatic
         fun newInstance(columnCount: Int) =
-            EstateFragment().apply {
+            RentalFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                 }

@@ -1,4 +1,4 @@
-package com.example.rentalapp.ui.room.dummy
+package com.example.rentalapp.ui.criteria.dummy
 
 import java.util.ArrayList
 import java.util.HashMap

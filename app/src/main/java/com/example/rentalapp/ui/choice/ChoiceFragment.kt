@@ -1,8 +1,11 @@
 package com.example.rentalapp.ui.choice
 
+import android.app.Activity
+import android.app.AlertDialog
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,14 +13,24 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.os.bundleOf
+import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
+import coil.load
 import com.example.rentalapp.R
+import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.AppDatabase
-import com.example.rentalapp.data.SampleData
+import com.example.rentalapp.data.Network
+import com.example.rentalapp.data.User
+import com.example.rentalapp.ui.load.LoadingDialog
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.IOException
+
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -46,6 +59,7 @@ class ChoiceFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val loadingDialog: LoadingDialog = LoadingDialog(context as Activity)
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_choice, container, false)
 
@@ -56,49 +70,192 @@ class ChoiceFragment : Fragment() {
         val moveInBtn: Button = view.findViewById(R.id.moveInButton)
         val addressBtn: Button = view.findViewById(R.id.addressButton)
 
-
         val id = arguments?.getString("id")
-
 
         CoroutineScope(Dispatchers.IO).launch{
 //            val apartmentInfo = SampleData.APARTMENT.filter{
 //                it.id.toString() == id
 //            }
-            val dao = AppDatabase.getInstace(requireContext()).apartmentDao()
-            val apartmentInfo = dao.findApartmentByID(id?.toInt()!!)
+
+            val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+            Log.d("ChoiceFragment id", id!!)
+            val apartmentInfo = dao.findApartmentByID(id.toInt())
+//            val img = Picasso.get().load(apartmentInfo.image_URL)
+
 
             CoroutineScope(Dispatchers.Main).launch{
-                Picasso.get().load(apartmentInfo.img).into(apartmentImage)
-                apartmentTitle.text = apartmentInfo.title
+//                img.into(apartmentImage)
+                apartmentImage.load(apartmentInfo.image_URL) {
+                    crossfade(true)
+                }
+                apartmentTitle.text = apartmentInfo.property_title
                 apartmentFirst.text = "Estate: ${apartmentInfo.estate}, " +
                         "Bedrooms: ${apartmentInfo.bedrooms}"
                 apartmentSecond.text =  "Rent: $${apartmentInfo.rent}, " +
-                        "Tenants: ${apartmentInfo.tenants}, Area: ${apartmentInfo.area}"
+                        "Tenants: ${apartmentInfo.expected_tenants}, Area: ${apartmentInfo.gross_area}"
 
                 addressBtn.setOnClickListener{
                     it.findNavController().navigate(R.id.action_choiceFragment_to_mapsFragment,
-                        bundleOf(
-                            Pair("latitude", apartmentInfo.latitude),
-                            Pair("longitude", apartmentInfo.longitude),
-                            Pair("estate", apartmentInfo.estate)))
+                    bundleOf(Pair("id", apartmentInfo.id), Pair("estate", apartmentInfo.estate)))
+                }
+
+                val pref: SharedPreferences = context?.getSharedPreferences(
+                    "userInfo",
+                    Context.MODE_PRIVATE
+                )!!
+
+                val myRentalsJson = pref.getString("myRentalsJson", "")
+
+                val apartment = Gson().fromJson<List<Apartment>>(myRentalsJson, object :
+                    TypeToken<List<Apartment>>() {}.type)
+
+                val myRental = apartment?.filter{id.toInt() == it.id}
+
+                if (myRental?.size == 1) {
+                    val myRentalID = myRental?.get(0)?.id
+                    Log.d("MyRentalID", myRentalID.toString())
+
+                    moveInBtn.text = "Move-out"
+
+                    moveInBtn.setOnClickListener {
+                        val pref: SharedPreferences = context?.getSharedPreferences(
+                            "userInfo",
+                            Context.MODE_PRIVATE
+                        )!!
+                        val username = pref.getString("username", "Not yet login")!!
+
+                        if (username != "Not yet login") {
+                            try {
+                                AlertDialog.Builder(context)
+                                    .setTitle("Are you sure?")
+                                    .setMessage("to move out this apartment?")
+                                    .setPositiveButton("Yes") { dialog, which ->
+                                        loadingDialog.startLoadingDialog()
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            val pref: SharedPreferences =
+                                                context?.getSharedPreferences(
+                                                    "userInfo",
+                                                    Context.MODE_PRIVATE
+                                                )!!
+
+                                            val cookie = pref.getString("cookie", "")
+
+                                            if (cookie != null) {
+                                                Log.d("Choice cookie", cookie)
+                                            }
+
+                                            Log.d("Choice cookie null", cookie + "abc")
+
+                                            if (cookie != "") {
+                                                val moveOutJson = Network.moveOut(id.toInt(), cookie!!)
+                                                val moveOutResponseCode = moveOutJson?.get(1)?.toInt()
+
+                                                if (moveOutResponseCode == 200) {
+//                                                    dao.updateOccupiedByID(id.toInt(), false)
+                                                    CoroutineScope(Dispatchers.Main).launch {
+                                                        loadingDialog.dismissDialog()
+                                                        AlertDialog.Builder(context)
+                                                            .setTitle("Move-out successfully.")
+                                                            .setNeutralButton("Ok", null)
+                                                            .show()
+                                                    }
+                                                } else {
+                                                    CoroutineScope(Dispatchers.Main).launch {
+                                                        loadingDialog.dismissDialog()
+                                                        AlertDialog.Builder(context)
+                                                            .setTitle("Error occured, response code ($moveOutResponseCode)")
+                                                            .setNeutralButton("Ok", null)
+                                                            .show()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } // A null listener allows the button to dismiss the dialog and take no further action.
+                                    .setNegativeButton("No", null)
+                                    .show()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+
+                        } else {
+                            AlertDialog.Builder(context)
+                                .setTitle("You are not logged in")
+                                .setMessage("Please login first.")
+                                .setNeutralButton("Ok", null)
+                                .show()
+                        }
+                    }
+
+                } else {
+                    moveInBtn.setOnClickListener {
+                        val pref: SharedPreferences = context?.getSharedPreferences(
+                            "userInfo",
+                            Context.MODE_PRIVATE
+                        )!!
+                        val username = pref.getString("username", "Not yet login")!!
+
+                        if (username != "Not yet login") {
+                            try {
+                                AlertDialog.Builder(context)
+                                    .setTitle("Are you sure?")
+                                    .setMessage("to move in this apartment?")
+                                    .setPositiveButton("Yes") { dialog, which ->
+                                        loadingDialog.startLoadingDialog()
+                                        CoroutineScope(Dispatchers.IO).launch {
+                                            val pref: SharedPreferences =
+                                                context?.getSharedPreferences(
+                                                    "userInfo",
+                                                    Context.MODE_PRIVATE
+                                                )!!
+
+                                            val cookie = pref.getString("cookie", "")
+
+                                            if (cookie != null) {
+                                                Log.d("Choice cookie", cookie)
+                                            }
+
+                                            Log.d("Choice cookie null", cookie + "abc")
+
+                                            if (cookie != "") {
+                                                val moveInJson = Network.moveIn(id.toInt(), cookie!!)
+                                                val moveInResponseCode = moveInJson?.get(1)?.toInt()
+                                                if (moveInResponseCode == 200) {
+                                                    CoroutineScope(Dispatchers.Main).launch {
+                                                        loadingDialog.dismissDialog()
+                                                        AlertDialog.Builder(context)
+                                                            .setTitle("Move-in successfully.")
+                                                            .setNeutralButton("Ok", null)
+                                                            .show()
+                                                    }
+                                                } else {
+                                                    CoroutineScope(Dispatchers.Main).launch {
+                                                        loadingDialog.dismissDialog()
+                                                        AlertDialog.Builder(context)
+                                                            .setTitle("Error occured, response code ($moveInResponseCode)")
+                                                            .setNeutralButton("Ok", null)
+                                                            .show()
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } // A null listener allows the button to dismiss the dialog and take no further action.
+                                    .setNegativeButton("No", null)
+                                    .show()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+
+                        } else {
+                            AlertDialog.Builder(context)
+                                .setTitle("You are not logged in")
+                                .setMessage("Please login first.")
+                                .setNeutralButton("Ok", null)
+                                .show()
+                        }
+                    }
                 }
             }
         }
-
-//        Picasso.get().load(apartmentInfo[0].img).into(apartmentImage)
-//        apartmentTitle.text = apartmentInfo[0].title
-//        apartmentFirst.text = "Estate: ${apartmentInfo[0].estate}, " +
-//                "Bedrooms: ${apartmentInfo[0].bedrooms}"
-//        apartmentSecond.text =  "Rent: $${apartmentInfo[0].rent}, " +
-//                "Tenants: ${apartmentInfo[0].tenants}, Area: ${apartmentInfo[0].area}"
-//
-//        addressBtn.setOnClickListener{
-//            it.findNavController().navigate(R.id.action_choiceFragment_to_mapsFragment,
-//            bundleOf(
-//                Pair("latitude", apartmentInfo[0].latitude),
-//                Pair("longitude", apartmentInfo[0].longitude),
-//                Pair("estate", apartmentInfo[0].estate)))
-//        }
 
         return view
     }

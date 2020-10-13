@@ -25,10 +25,7 @@ import com.example.rentalapp.ui.load.LoadingDialog
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.IOException
 
 
@@ -73,15 +70,10 @@ class ChoiceFragment : Fragment() {
         val id = arguments?.getString("id")
 
         CoroutineScope(Dispatchers.IO).launch{
-//            val apartmentInfo = SampleData.APARTMENT.filter{
-//                it.id.toString() == id
-//            }
-
             val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
             Log.d("ChoiceFragment id", id!!)
             val apartmentInfo = dao.findApartmentByID(id.toInt())
 //            val img = Picasso.get().load(apartmentInfo.image_URL)
-
 
             CoroutineScope(Dispatchers.Main).launch{
 //                img.into(apartmentImage)
@@ -104,24 +96,33 @@ class ChoiceFragment : Fragment() {
                     Context.MODE_PRIVATE
                 )!!
 
-                val myRentalsJson = pref.getString("myRentalsJson", "")
+//                moveInBtn.text = pref.getString("moveBtn", "Move-in")
+
+                var myRentalsJson = pref.getString("myRentalsJson", "")
+
+                Log.d("BeforeMoveINOUT myRentals rawJson", myRentalsJson!!)
 
                 val apartment = Gson().fromJson<List<Apartment>>(myRentalsJson, object :
                     TypeToken<List<Apartment>>() {}.type)
 
                 val myRental = apartment?.filter{id.toInt() == it.id}
 
+                Log.d("id.toInt()", id)
+
+                Log.d("BeforeMoveINOUT myRental", myRental.toString())
+
                 if (myRental?.size == 1) {
+//                if (moveInBtn.text == "Move-out") {
                     val myRentalID = myRental?.get(0)?.id
                     Log.d("MyRentalID", myRentalID.toString())
 
                     moveInBtn.text = "Move-out"
 
                     moveInBtn.setOnClickListener {
-                        val pref: SharedPreferences = context?.getSharedPreferences(
-                            "userInfo",
-                            Context.MODE_PRIVATE
-                        )!!
+//                        val pref: SharedPreferences = context?.getSharedPreferences(
+//                            "userInfo",
+//                            Context.MODE_PRIVATE
+//                        )!!
                         val username = pref.getString("username", "Not yet login")!!
 
                         if (username != "Not yet login") {
@@ -132,11 +133,11 @@ class ChoiceFragment : Fragment() {
                                     .setPositiveButton("Yes") { dialog, which ->
                                         loadingDialog.startLoadingDialog()
                                         CoroutineScope(Dispatchers.IO).launch {
-                                            val pref: SharedPreferences =
-                                                context?.getSharedPreferences(
-                                                    "userInfo",
-                                                    Context.MODE_PRIVATE
-                                                )!!
+//                                            val pref: SharedPreferences =
+//                                                context?.getSharedPreferences(
+//                                                    "userInfo",
+//                                                    Context.MODE_PRIVATE
+//                                                )!!
 
                                             val cookie = pref.getString("cookie", "")
 
@@ -151,6 +152,7 @@ class ChoiceFragment : Fragment() {
                                                 val moveOutResponseCode = moveOutJson?.get(1)?.toInt()
 
                                                 if (moveOutResponseCode == 200) {
+                                                    val myRentals = moveOutJson?.get(0)
 //                                                    dao.updateOccupiedByID(id.toInt(), false)
                                                     CoroutineScope(Dispatchers.Main).launch {
                                                         loadingDialog.dismissDialog()
@@ -158,6 +160,12 @@ class ChoiceFragment : Fragment() {
                                                             .setTitle("Move-out successfully.")
                                                             .setNeutralButton("Ok", null)
                                                             .show()
+
+                                                        pref.edit().apply{
+                                                            putString("myRentalsJson", myRentals)
+                                                        }.apply()
+
+                                                        it.findNavController().navigate(R.id.action_choiceFragment_to_homeFragment)
                                                     }
                                                 } else {
                                                     CoroutineScope(Dispatchers.Main).launch {
@@ -187,11 +195,9 @@ class ChoiceFragment : Fragment() {
                     }
 
                 } else {
+
                     moveInBtn.setOnClickListener {
-                        val pref: SharedPreferences = context?.getSharedPreferences(
-                            "userInfo",
-                            Context.MODE_PRIVATE
-                        )!!
+
                         val username = pref.getString("username", "Not yet login")!!
 
                         if (username != "Not yet login") {
@@ -202,11 +208,11 @@ class ChoiceFragment : Fragment() {
                                     .setPositiveButton("Yes") { dialog, which ->
                                         loadingDialog.startLoadingDialog()
                                         CoroutineScope(Dispatchers.IO).launch {
-                                            val pref: SharedPreferences =
-                                                context?.getSharedPreferences(
-                                                    "userInfo",
-                                                    Context.MODE_PRIVATE
-                                                )!!
+//                                            val pref: SharedPreferences =
+//                                                context?.getSharedPreferences(
+//                                                    "userInfo",
+//                                                    Context.MODE_PRIVATE
+//                                                )!!
 
                                             val cookie = pref.getString("cookie", "")
 
@@ -220,12 +226,21 @@ class ChoiceFragment : Fragment() {
                                                 val moveInJson = Network.moveIn(id.toInt(), cookie!!)
                                                 val moveInResponseCode = moveInJson?.get(1)?.toInt()
                                                 if (moveInResponseCode == 200) {
+                                                    val myRentals = moveInJson?.get(0)
                                                     CoroutineScope(Dispatchers.Main).launch {
                                                         loadingDialog.dismissDialog()
                                                         AlertDialog.Builder(context)
                                                             .setTitle("Move-in successfully.")
                                                             .setNeutralButton("Ok", null)
                                                             .show()
+
+                                                        pref.edit().apply{
+                                                            putString("myRentalsJson", myRentals)
+                                                        }.commit()
+
+                                                        moveInBtn.text = "Move-out"
+
+                                                        it.findNavController().navigate(R.id.action_choiceFragment_to_homeFragment)
                                                     }
                                                 } else {
                                                     CoroutineScope(Dispatchers.Main).launch {

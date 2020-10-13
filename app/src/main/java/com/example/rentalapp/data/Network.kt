@@ -1,6 +1,7 @@
 package com.example.rentalapp.data
 
 import android.util.Log
+import kotlinx.coroutines.withTimeout
 import java.io.IOException
 import java.net.HttpCookie
 import java.net.HttpURLConnection
@@ -76,12 +77,16 @@ class Network {
 
         suspend fun moveIn(id: Int, cookie: String): List<String>?{
             try {
-                val connection = URL(URL+"user/rent/$id").openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
+                val responseCode: Int
 
-                connection.setRequestProperty("Cookie", cookie)
+                    val connection =
+                        URL(URL + "user/rent/$id").openConnection() as HttpURLConnection
+                    connection.requestMethod = "POST"
 
-                Log.d("MoveIn", connection.responseCode.toString())
+                    connection.setRequestProperty("Cookie", cookie)
+
+                    Log.d("MoveIn", connection.responseCode.toString())
+                    responseCode = connection.responseCode
 
                 val myRentalsJson = getMyRentals(cookie)
 
@@ -91,6 +96,29 @@ class Network {
                 Log.d("MoveIn err", "Connection problem")
                 return null
             }
+        }
+
+        suspend fun moveOut(id: Int, cookie: String): List<String>?{
+            try {
+                val connection: HttpURLConnection
+
+                withTimeout(3000L) {
+                    connection = URL(URL + "user/rent/$id").openConnection() as HttpURLConnection
+                }
+                connection.requestMethod = "DELETE"
+                connection.setRequestProperty("Cookie", cookie)
+
+                Log.d("MoveIn", connection.responseCode.toString())
+
+                val myRentalsJson = getMyRentals(cookie)
+
+                return listOf(myRentalsJson!!, connection.responseCode.toString())
+
+            } catch (e: IOException) {
+                Log.d("Moveout err", e.toString())
+                return null
+            }
+
         }
 
         suspend fun getMyRentals(cookie: String): String?{
@@ -107,31 +135,14 @@ class Network {
                     data = connection.inputStream.read()
                 }
 
+                Log.d("getMyRentals", builder.toString())
+
                 return builder.toString()
 
             } catch (e: IOException){
                 Log.d("MyRentals err", e.toString())
                 return null
             }
-        }
-
-        suspend fun moveOut(id: Int, cookie: String): List<String>?{
-            try {
-                val connection = URL(URL+"user/rent/$id").openConnection() as HttpURLConnection
-                connection.requestMethod = "DELETE"
-                connection.setRequestProperty("Cookie", cookie)
-
-                Log.d("MoveIn", connection.responseCode.toString())
-
-                val myRentalsJson = getMyRentals(cookie)
-
-                return listOf(myRentalsJson!!, connection.responseCode.toString())
-
-            } catch (e: IOException) {
-                Log.d("Moveout err", e.toString())
-                return null
-            }
-
         }
 
     }

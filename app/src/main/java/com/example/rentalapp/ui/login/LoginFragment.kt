@@ -53,7 +53,6 @@ class LoginFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_login, container, false)
-
         val username: EditText = view.findViewById(R.id.usernameTextView)
         val password: EditText = view.findViewById(R.id.passwordTextView)
         val loginBtn: Button = view.findViewById(R.id.loginBtn)

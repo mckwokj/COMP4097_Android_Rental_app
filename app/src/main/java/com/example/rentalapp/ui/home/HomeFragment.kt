@@ -89,6 +89,7 @@ class HomeFragment : Fragment() {
                 Log.d("HomeFragment", apartment.toString())
 
                 val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
 
                 // delete all existing apartments
                 dao.findAllApartments().forEach{
@@ -101,6 +102,7 @@ class HomeFragment : Fragment() {
 //                    Log.d("HomeFragmentCoor", coordinate.toString())
 //                    if (coordinate != null) {
 //                        dao.updateLatLong(it.id, coordinate.latitude, coordinate.longitude)
+//                        location_dao.insert(Location(it.estate, coordinate.latitude, coordinate.longitude))
 //                    }
                 }
                     CoroutineScope(Dispatchers.Main).launch {

@@ -53,6 +53,9 @@ class MapsFragment : Fragment() {
                 getString("estate")
             }
 
+            val isOnline = isOnline(requireContext())
+            Log.d("isOnline", isOnline.toString())
+
             if (apartmentInfo != null) {
                 val id = apartmentInfo?.getInt("id")
                 val estate = apartmentInfo?.getString("estate")
@@ -60,7 +63,7 @@ class MapsFragment : Fragment() {
                 CoroutineScope(Dispatchers.IO).launch {
                 val dao = AppDatabase.getInstance(requireContext()).locationDao()
                 var location = dao.findLocationByEstate(estate!!)
-                    val coordinate: LatLng
+                    var coordinate: LatLng? = null
 
                 if (location != null) {
                     coordinate = LatLng(location.latitude, location.longitude)
@@ -78,7 +81,7 @@ class MapsFragment : Fragment() {
                 }
 
                     CoroutineScope(Dispatchers.Main).launch {
-                        googleMap.addMarker(MarkerOptions().position(coordinate).title(estate))
+                        googleMap.addMarker(MarkerOptions().position(coordinate!!).title(estate))
                         googleMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
                         googleMap.moveCamera(CameraUpdateFactory.zoomTo(15F))
                     }

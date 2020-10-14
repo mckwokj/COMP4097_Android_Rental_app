@@ -143,7 +143,7 @@ class UserFragment : Fragment() {
                                 .navigate(R.id.action_userFragment_to_loginFragment)
                         }
                     } else {
-                        Snackbar.make(view, "Fail to logout", Snackbar.LENGTH_LONG).show()
+                        Snackbar.make(view, "Fail to logout, please check your internet connection.", Snackbar.LENGTH_LONG).show()
                     }
                 }
             } else {

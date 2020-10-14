@@ -22,7 +22,6 @@ import com.example.rentalapp.R
 import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.AppDatabase
 import com.example.rentalapp.data.Network
-import com.example.rentalapp.data.Network.Companion.isOnline
 import com.example.rentalapp.data.User
 import com.example.rentalapp.ui.load.LoadingDialog
 import com.google.gson.Gson
@@ -91,10 +90,7 @@ class ChoiceFragment : Fragment() {
 
                 addressBtn.setOnClickListener {
 
-                    var isOnline: Boolean? = null
-                    CoroutineScope(Dispatchers.IO).launch {
-                        isOnline = isOnline(requireContext())
-                    }
+                    val isOnline = isOnline(requireContext())
 
                     if (isOnline!!) {
                         it.findNavController().navigate(
@@ -145,11 +141,7 @@ class ChoiceFragment : Fragment() {
 //                            "userInfo",
 //                            Context.MODE_PRIVATE
 //                        )!!
-                        var isOnline: Boolean? = null
-
-                        CoroutineScope(Dispatchers.IO).launch {
-                            isOnline = isOnline(requireContext())
-                        }
+                        val isOnline = isOnline(requireContext())
 
                         if (isOnline!!) {
                             val username = pref.getString("username", "Not yet login")!!
@@ -206,7 +198,8 @@ class ChoiceFragment : Fragment() {
                                                         CoroutineScope(Dispatchers.Main).launch {
                                                             loadingDialog.dismissDialog()
                                                             AlertDialog.Builder(context)
-                                                                .setTitle("Error occured, response code ($moveOutResponseCode)")
+                                                                .setTitle("Network error")
+                                                                .setMessage("Please enable your network connection")
                                                                 .setNeutralButton("Ok", null)
                                                                 .show()
                                                         }
@@ -227,6 +220,12 @@ class ChoiceFragment : Fragment() {
                                     .setNeutralButton("Ok", null)
                                     .show()
                             }
+                        } else {
+                            AlertDialog.Builder(context)
+                                .setTitle("Network error")
+                                .setMessage("Please enable your network connection")
+                                .setNeutralButton("Ok", null)
+                                .show()
                         }
                     }
 
@@ -236,10 +235,7 @@ class ChoiceFragment : Fragment() {
 
                         val username = pref.getString("username", "Not yet login")!!
 
-                        var isOnline: Boolean? = null
-                        CoroutineScope(Dispatchers.IO).launch {
-                            isOnline = isOnline(requireContext())
-                        }
+                        val isOnline = isOnline(requireContext())
 
                         if (isOnline!!) {
 
@@ -316,6 +312,12 @@ class ChoiceFragment : Fragment() {
                                     .setNeutralButton("Ok", null)
                                     .show()
                             }
+                        } else {
+                            AlertDialog.Builder(context)
+                                .setTitle("Network error")
+                                .setMessage("Please enable your network connection")
+                                .setNeutralButton("Ok", null)
+                                .show()
                         }
                     }
                 }
@@ -323,6 +325,29 @@ class ChoiceFragment : Fragment() {
         }
 
         return view
+    }
+
+    fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        if (connectivityManager != null) {
+            val capabilities =
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+            if (capabilities != null) {
+                if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                    return true
+                } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                    Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                    return true
+                }
+            }
+        }
+        Log.i("Internet", "Network failure")
+        return false
     }
 
     companion object {

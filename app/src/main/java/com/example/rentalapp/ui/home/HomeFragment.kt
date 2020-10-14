@@ -15,6 +15,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.rentalapp.R
 import com.example.rentalapp.data.*
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -113,14 +114,16 @@ class HomeFragment : Fragment() {
                 Log.d("HomeFragment", "Error in loading data")
                 Log.d("HomeFragment", e.toString())
 
-                val apartment = listOf(Apartment(-1, "Cannot fetch apartments",
-                    "Please check your network connection", 0, 0,
-                    0, 0, false, null, null,
-                    ""))
+                Snackbar.make(requireView(), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
-                }
+//                val apartment = listOf(Apartment(-1, "Cannot fetch apartments",
+//                    "Please check your network connection", 0, 0,
+//                    0, 0, false, null, null,
+//                    ""))
+//
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+//                }
             }
         }
     }

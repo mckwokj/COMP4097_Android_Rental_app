@@ -96,7 +96,7 @@ class LoginFragment : Fragment() {
                 }
                 // fail to login
                 else {
-                    Snackbar.make(view, "Fail to login, please try again.", Snackbar.LENGTH_LONG).show()
+                    Snackbar.make(view, "Fail to login, please check your network connection.", Snackbar.LENGTH_LONG).show()
                 }
             }
         }

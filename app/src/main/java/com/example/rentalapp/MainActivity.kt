@@ -62,13 +62,12 @@ class MainActivity : AppCompatActivity() {
                     apartment.forEach {
                         dao.insert(it)
                     }
+
                 } else {
                     Snackbar.make(findViewById(R.id.homeFragment), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
+//                    Snackbar.make(findViewById(R.id.homeFragment), "abcdefg", Snackbar.LENGTH_LONG).show()
                 }
             }
-//        } else {
-//            Snackbar.make(findViewById(R.id.homeFragment), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
-//        }
 
 
     }

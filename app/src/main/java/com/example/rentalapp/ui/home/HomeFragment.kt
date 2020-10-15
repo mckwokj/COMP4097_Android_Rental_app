@@ -56,22 +56,47 @@ class HomeFragment : Fragment() {
         }
 
         recyclerView.layoutManager = LinearLayoutManager(context)
-//        reloadData(recyclerView)
-        CoroutineScope(Dispatchers.IO).launch{
+
+        CoroutineScope(Dispatchers.IO).launch {
+
             val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-            val apartments = dao.findAllApartments()
+            val apartment = dao.findAllApartments()
 
-            // when the app is newly installed
-            Log.d("HomeFragment apartment size", apartments.size.toString())
-
-            if (apartments.size == 0){
-                reloadData(recyclerView)
-            } else {
+            if (apartment.size != 0) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    recyclerView.adapter = HomeRecyclerViewAdapter(apartments)
+                    recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                    Log.d("HomeFragment", "sent already")
+                }
+            } else {
+                val apartment = listOf(
+                    Apartment(
+                        -1, "Cannot fetch apartments",
+                        "Please check your network connection", 0, 0,
+                        0, 0, false, null, null,
+                        ""
+                    )
+                )
+                CoroutineScope(Dispatchers.Main).launch {
+                    recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
                 }
             }
         }
+//        reloadData(recyclerView)
+//        CoroutineScope(Dispatchers.IO).launch{
+//            val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+//            val apartments = dao.findAllApartments()
+//
+//            // when the app is newly installed
+//            Log.d("HomeFragment apartment size", apartments.size.toString())
+//
+//            if (apartments.size == 0){
+//                reloadData(recyclerView)
+//            } else {
+//                CoroutineScope(Dispatchers.Main).launch {
+//                    recyclerView.adapter = HomeRecyclerViewAdapter(apartments)
+//                }
+//            }
+//        }
 
         return swipeLayout
     }
@@ -92,24 +117,32 @@ class HomeFragment : Fragment() {
                     Log.d("HomeFragment", apartment.toString())
 
                     val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                    Log.d("HomeFragment", "ckpt1")
                     val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
+                    Log.d("HomeFragment", "ckpt2")
+
+                    val previousApartments = dao.findAllApartments()
+                    Log.d("HomeFragment", "ckpt3")
+
+//                    Log.d("HomeFragment", "chpt3a"+(previousApartments.size!=0).toString())
 
                     // delete all existing apartments
-                    dao.findAllApartments().forEach {
+                    dao.findAllApartments().forEach{
                         dao.delete(it)
                     }
 
+                    Log.d("HomeFragment", "ckpt5")
+
+                    Log.d("HomeFragment", dao.findAllApartments().toString())
+
                     apartment.forEach {
+                        Log.d("HomeFragment", it.toString())
                         dao.insert(it)
-//                    val coordinate = getLocationFromAddress(context, "${it.estate}, Hong Kong")
-//                    Log.d("HomeFragmentCoor", coordinate.toString())
-//                    if (coordinate != null) {
-//                        dao.updateLatLong(it.id, coordinate.latitude, coordinate.longitude)
-//                        location_dao.insert(Location(it.estate, coordinate.latitude, coordinate.longitude))
-//                    }
                     }
+
                     CoroutineScope(Dispatchers.Main).launch {
                         recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                        Log.d("HomeFragment", "ckpt7")
                     }
                 } else {
                     val dao = AppDatabase.getInstance(requireContext()).apartmentDao()

@@ -266,6 +266,7 @@ class ChoiceFragment : Fragment() {
                                                         if (moveInJson != null) {
                                                         val moveInResponseCode =
                                                             moveInJson?.get(1)?.toInt()
+
                                                         if (moveInResponseCode == 200) {
                                                             val myRentals = moveInJson?.get(0)
                                                             CoroutineScope(Dispatchers.Main).launch {
@@ -286,6 +287,14 @@ class ChoiceFragment : Fragment() {
 
                                                                 it.findNavController()
                                                                     .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                            }
+                                                        } else if (moveInResponseCode == 400) {
+                                                            loadingDialog.dismissDialog()
+                                                            CoroutineScope(Dispatchers.Main).launch {
+                                                                AlertDialog.Builder(context)
+                                                                    .setTitle("Already full")
+                                                                    .setNeutralButton("Ok", null)
+                                                                    .show()
                                                             }
                                                         }
                                                     } else {

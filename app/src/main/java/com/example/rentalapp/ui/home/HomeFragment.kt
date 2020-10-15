@@ -82,48 +82,88 @@ class HomeFragment : Fragment() {
             try {
                 val json = Network.getTextFromNetwork(URL)
 
-                Log.d("HomeFragment rawJson", json)
-                // convert the string json into List<Apartment>
-                val apartment = Gson().fromJson<List<Apartment>>(json, object:
-                    TypeToken<List<Apartment>>() {}.type)
+                if (json != "") {
 
-                Log.d("HomeFragment", apartment.toString())
+                    Log.d("HomeFragment rawJson", json)
+                    // convert the string json into List<Apartment>
+                    val apartment = Gson().fromJson<List<Apartment>>(json, object :
+                        TypeToken<List<Apartment>>() {}.type)
 
-                val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-                val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
+                    Log.d("HomeFragment", apartment.toString())
 
-                // delete all existing apartments
-                dao.findAllApartments().forEach{
-                    dao.delete(it)
-                }
+                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                    val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
 
-                apartment.forEach {
-                    dao.insert(it)
+                    // delete all existing apartments
+                    dao.findAllApartments().forEach {
+                        dao.delete(it)
+                    }
+
+                    apartment.forEach {
+                        dao.insert(it)
 //                    val coordinate = getLocationFromAddress(context, "${it.estate}, Hong Kong")
 //                    Log.d("HomeFragmentCoor", coordinate.toString())
 //                    if (coordinate != null) {
 //                        dao.updateLatLong(it.id, coordinate.latitude, coordinate.longitude)
 //                        location_dao.insert(Location(it.estate, coordinate.latitude, coordinate.longitude))
 //                    }
-                }
+                    }
                     CoroutineScope(Dispatchers.Main).launch {
                         recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
                     }
+                } else {
+                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                    if (dao.findAllApartments().size == 0) {
+
+                        val apartment = listOf(
+                            Apartment(
+                                -1, "Cannot fetch apartments",
+                                "Please check your network connection", 0, 0,
+                                0, 0, false, null, null,
+                                ""
+                            )
+                        )
+                        CoroutineScope(Dispatchers.Main).launch {
+                            recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                        }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            Snackbar.make(
+                                requireView(),
+                                "Fail to grab the latest data. Please check you internet connection.",
+                                Snackbar.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
 
             } catch (e: Exception){
                 Log.d("HomeFragment", "Error in loading data")
                 Log.d("HomeFragment", e.toString())
 
-                Snackbar.make(requireView(), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
+                CoroutineScope(Dispatchers.Main).launch {
+                    Snackbar.make(
+                        requireView(),
+                        "Fail to grab the latest data. Please check you internet connection.",
+                        Snackbar.LENGTH_LONG
+                    ).show()
+                }
 
-//                val apartment = listOf(Apartment(-1, "Cannot fetch apartments",
-//                    "Please check your network connection", 0, 0,
-//                    0, 0, false, null, null,
-//                    ""))
-//
-//                CoroutineScope(Dispatchers.Main).launch {
-//                    recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
-//                }
+                val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+
+                if (dao.findAllApartments().size == 0) {
+                    val apartment = listOf(
+                        Apartment(
+                            -1, "Cannot fetch apartments",
+                            "Please check your network connection", 0, 0,
+                            0, 0, false, null, null,
+                            ""
+                        )
+                    )
+                    CoroutineScope(Dispatchers.Main).launch {
+                        recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                    }
+                }
             }
         }
     }

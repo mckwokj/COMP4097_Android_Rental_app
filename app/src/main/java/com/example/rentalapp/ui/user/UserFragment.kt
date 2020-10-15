@@ -1,5 +1,6 @@
 package com.example.rentalapp.ui.user
 
+import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
@@ -21,6 +22,7 @@ import com.example.rentalapp.MainActivity
 import com.example.rentalapp.R
 import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.Network
+import com.example.rentalapp.ui.load.LoadingDialog
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -96,14 +98,31 @@ class UserFragment : Fragment() {
         myRentalsBtn.setOnClickListener{
             if (username != "Not yet login") {
 
-//                        val apartment = Gson().fromJson<List<Apartment>>(myRenalsJson, object :
-//                            TypeToken<List<Apartment>>() {}.type)
-//
-//                        Log.d("myRentals", apartment.toString())
+                val pref: SharedPreferences = context?.getSharedPreferences("userInfo",
+                    Context.MODE_PRIVATE
+                )!!
+
+                val cookie = pref.getString("cookie", "")
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    val myRentalsJson = Network.getMyRentals(cookie!!)
+                    if (myRentalsJson != null) {
+                        pref.edit().putString("myRentalsJson", myRentalsJson).commit()
 
                         CoroutineScope(Dispatchers.Main).launch {
                             findNavController().navigate(R.id.action_userFragment_to_rentalFragment)
                         }
+                    } else {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            AlertDialog.Builder(context)
+                                .setTitle("Network error")
+                                .setMessage("Please enable your network connection")
+                                .setNeutralButton("Ok", null)
+                                .show()
+                        }
+                    }
+                }
+
             } else {
                 AlertDialog.Builder(context)
                     .setTitle("You are not logged in")
@@ -113,12 +132,13 @@ class UserFragment : Fragment() {
             }
         }
 
-        loginOffBtn.setOnClickListener{
+        val loadingDialog: LoadingDialog = LoadingDialog(context as Activity)
 
+        loginOffBtn.setOnClickListener{
+            loadingDialog.startLoadingDialog()
             if (username != "Not yet login") {
 
                 CoroutineScope(Dispatchers.IO).launch {
-
                     val code = Network.logout("user/logout")
                     Log.d("code", code.toString())
 
@@ -149,6 +169,7 @@ class UserFragment : Fragment() {
             } else {
                 it.findNavController().navigate(R.id.action_userFragment_to_loginFragment)
             }
+            loadingDialog.dismissDialog()
         }
 
         return view

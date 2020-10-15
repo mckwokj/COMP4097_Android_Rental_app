@@ -68,23 +68,30 @@ class MapsFragment : Fragment() {
                 if (location != null) {
                     coordinate = LatLng(location.latitude, location.longitude)
                     Log.d("MapsFragment not null", coordinate.toString())
-                }
-                else {
-                    coordinate = getLocationFromAddress(
-                        requireContext(),
-                        estate + ", Hong Kong", id
-                    )!!
-
-                    Log.d("MapsFragment null", coordinate.toString())
-
-                    dao.insert(Location(estate, coordinate.latitude, coordinate.longitude))
-                }
 
                     CoroutineScope(Dispatchers.Main).launch {
                         googleMap.addMarker(MarkerOptions().position(coordinate!!).title(estate))
                         googleMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
                         googleMap.moveCamera(CameraUpdateFactory.zoomTo(15F))
                     }
+                }
+                else {
+                    coordinate = getLocationFromAddress(
+                        requireContext(),
+                        estate + ", Hong Kong", id
+                    )
+
+                    Log.d("MapsFragment null", coordinate.toString())
+                    if (coordinate != null) {
+                        dao.insert(Location(estate, coordinate.latitude, coordinate.longitude))
+
+                        CoroutineScope(Dispatchers.Main).launch {
+                            googleMap.addMarker(MarkerOptions().position(coordinate!!).title(estate))
+                            googleMap.moveCamera(CameraUpdateFactory.newLatLng(coordinate))
+                            googleMap.moveCamera(CameraUpdateFactory.zoomTo(15F))
+                        }
+                    }
+                }
 //                }
 
 //                if (apartment.latitude == null) {
@@ -119,7 +126,7 @@ class MapsFragment : Fragment() {
             val location = address[0]
             p1 = LatLng(location.latitude, location.longitude)
         } catch (ex: IOException) {
-//            ex.printStackTrace()
+            ex.printStackTrace()
         }
         return p1
     }

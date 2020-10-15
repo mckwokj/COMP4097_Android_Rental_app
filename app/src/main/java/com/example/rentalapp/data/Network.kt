@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
 import java.net.HttpCookie
@@ -14,16 +15,21 @@ class Network {
     companion object{
         val URL = "https://morning-plains-00409.herokuapp.com/"
         suspend fun getTextFromNetwork(url: String): String{
-            val builder = StringBuilder()
-            val connection = URL(URL+url).openConnection() as HttpURLConnection
-            var data: Int = connection.inputStream.read()
+            try {
+                val builder = StringBuilder()
+                val connection = URL(URL + url).openConnection() as HttpURLConnection
+                var data: Int = connection.inputStream.read()
 
-            while (data != -1) {
-                builder.append(data.toChar())
-                data = connection.inputStream.read()
+                while (data != -1) {
+                    builder.append(data.toChar())
+                    data = connection.inputStream.read()
+                }
+
+                return builder.toString()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                return ""
             }
-
-            return builder.toString()
         }
 
         suspend fun login(url: String, username: String, password: String): List<String>?{
@@ -153,7 +159,7 @@ class Network {
 //            val connectivityManager =
 //                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
 //            if (connectivityManager != null) {
-//                val capabilities =
+//                val capabilities =y
 //                    connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
 //                if (capabilities != null) {
 //                    if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {

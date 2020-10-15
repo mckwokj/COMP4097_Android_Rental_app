@@ -1,5 +1,6 @@
 package com.example.rentalapp.ui.login
 
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -8,8 +9,10 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import androidx.core.os.bundleOf
 import androidx.navigation.findNavController
 import androidx.preference.PreferenceManager
@@ -17,9 +20,11 @@ import com.example.rentalapp.R
 import com.example.rentalapp.data.Apartment
 import com.example.rentalapp.data.Network
 import com.example.rentalapp.data.User
+import com.example.rentalapp.ui.load.LoadingDialog
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.android.synthetic.main.fragment_login.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -56,49 +61,53 @@ class LoginFragment : Fragment() {
         val username: EditText = view.findViewById(R.id.usernameTextView)
         val password: EditText = view.findViewById(R.id.passwordTextView)
         val loginBtn: Button = view.findViewById(R.id.loginBtn)
+        val loadingDialog: LoadingDialog = LoadingDialog(context as Activity)
 
         val url = "user/login"
 
         loginBtn.setOnClickListener {
-            CoroutineScope(Dispatchers.IO).launch {
-                val loginJson = Network.login(url, username.text.toString(), password.text.toString())
+                loadingDialog.startLoadingDialog()
 
-                Log.d("LoginFragment json", loginJson.toString())
+                CoroutineScope(Dispatchers.IO).launch {
+                    val loginJson = Network.login(url, username.text.toString(), password.text.toString())
 
-                val user = Gson().fromJson<User>(loginJson?.get(0), object:
-                    TypeToken<User>() {}.type)
+                    Log.d("LoginFragment json", loginJson.toString())
 
-                // login successfully
-                if (loginJson != null) {
-                    val cookie = loginJson!!.get(1)
-                    Log.d("LoginFragment cookie", cookie)
-                    val myRentalsJson = loginJson!!.get(2)
+                    val user = Gson().fromJson<User>(loginJson?.get(0), object:
+                        TypeToken<User>() {}.type)
 
-                    CoroutineScope(Dispatchers.Main).launch {
-//                        it.findNavController().navigate(R.id.action_loginFragment_to_userFragment,
-//                        bundleOf(Pair("username", user.username), Pair("img", user.avatar)))
+                    // login successfully
+                    if (loginJson != null) {
+                        val cookie = loginJson!!.get(1)
+                        Log.d("LoginFragment cookie", cookie)
+                        val myRentalsJson = loginJson!!.get(2)
 
-                        val pref: SharedPreferences = context?.getSharedPreferences("userInfo",
-                            Context.MODE_PRIVATE
-                        )!!
+                        CoroutineScope(Dispatchers.Main).launch {
+    //                        it.findNavController().navigate(R.id.action_loginFragment_to_userFragment,
+    //                        bundleOf(Pair("username", user.username), Pair("img", user.avatar)))
 
-                        pref.edit().apply{
-                            putString("username", user.username)
-                            putString("img", user.avatar)
-                            putString("cookie", cookie)
-                            putString("myRentalsJson", myRentalsJson)
-                        }.commit()
+                            val pref: SharedPreferences = context?.getSharedPreferences("userInfo",
+                                Context.MODE_PRIVATE
+                            )!!
 
-                        it.findNavController().navigate(R.id.action_loginFragment_to_userFragment,
-                            bundleOf(Pair("username", user.username), Pair("img", user.avatar)))
-                        Snackbar.make(view, "Welcome ${user.username}.", Snackbar.LENGTH_LONG).show()
+                            pref.edit().apply{
+                                putString("username", user.username)
+                                putString("img", user.avatar)
+                                putString("cookie", cookie)
+                                putString("myRentalsJson", myRentalsJson)
+                            }.commit()
+
+                            it.findNavController().navigate(R.id.action_loginFragment_to_userFragment,
+                                bundleOf(Pair("username", user.username), Pair("img", user.avatar)))
+                            Snackbar.make(view, "Welcome ${user.username}.", Snackbar.LENGTH_LONG).show()
+                        }
                     }
+                    // fail to login
+                    else {
+                        Snackbar.make(view, "Fail to login.", Snackbar.LENGTH_LONG).show()
+                    }
+                    loadingDialog.dismissDialog()
                 }
-                // fail to login
-                else {
-                    Snackbar.make(view, "Fail to login, please check your network connection.", Snackbar.LENGTH_LONG).show()
-                }
-            }
         }
 
         return view

@@ -42,29 +42,33 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("onCreate", "onCreate")
 
-        if (isOnline(this@MainActivity)) {
+//        if (isOnline(this@MainActivity)) {
             CoroutineScope(Dispatchers.IO).launch {
                 val dao = AppDatabase.getInstance(this@MainActivity).apartmentDao()
 
                 val URL = "property/json"
                 val json = Network.getTextFromNetwork(URL)
 
-                Log.d("HomeFragment rawJson", json)
-                // convert the string json into List<Apartment>
-                val apartment = Gson().fromJson<List<Apartment>>(json, object :
-                    TypeToken<List<Apartment>>() {}.type)
+                if (json != "") {
+                    Log.d("HomeFragment rawJson", json)
+                    // convert the string json into List<Apartment>
+                    val apartment = Gson().fromJson<List<Apartment>>(json, object :
+                        TypeToken<List<Apartment>>() {}.type)
 
-                dao.findAllApartments().forEach{
-                    dao.delete(it)
-                }
+                    dao.findAllApartments().forEach {
+                        dao.delete(it)
+                    }
 
-                apartment.forEach {
-                    dao.insert(it)
+                    apartment.forEach {
+                        dao.insert(it)
+                    }
+                } else {
+                    Snackbar.make(findViewById(R.id.homeFragment), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
                 }
             }
-        } else {
-            Snackbar.make(findViewById(R.id.homeFragment), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
-        }
+//        } else {
+//            Snackbar.make(findViewById(R.id.homeFragment), "Fail to grab the latest data. Please check you internet connection.", Snackbar.LENGTH_LONG).show()
+//        }
 
 
     }

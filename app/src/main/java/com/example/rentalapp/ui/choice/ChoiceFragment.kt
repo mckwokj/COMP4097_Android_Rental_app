@@ -154,12 +154,7 @@ class ChoiceFragment : Fragment() {
                                         .setPositiveButton("Yes") { dialog, which ->
                                             loadingDialog.startLoadingDialog()
                                             CoroutineScope(Dispatchers.IO).launch {
-//                                            val pref: SharedPreferences =
-//                                                context?.getSharedPreferences(
-//                                                    "userInfo",
-//                                                    Context.MODE_PRIVATE
-//                                                )!!
-
+//
                                                 val cookie = pref.getString("cookie", "")
 
                                                 if (cookie != null) {
@@ -245,58 +240,71 @@ class ChoiceFragment : Fragment() {
                                         .setTitle("Are you sure?")
                                         .setMessage("to move in this apartment?")
                                         .setPositiveButton("Yes") { dialog, which ->
-                                            loadingDialog.startLoadingDialog()
-                                            CoroutineScope(Dispatchers.IO).launch {
+
+                                            val isOnline2 = isOnline(requireContext())
+
+                                            if (isOnline!!) {
+                                                loadingDialog.startLoadingDialog()
+                                                CoroutineScope(Dispatchers.IO).launch {
 //                                            val pref: SharedPreferences =
 //                                                context?.getSharedPreferences(
 //                                                    "userInfo",
 //                                                    Context.MODE_PRIVATE
 //                                                )!!
 
-                                                val cookie = pref.getString("cookie", "")
+                                                    val cookie = pref.getString("cookie", "")
 
-                                                if (cookie != null) {
-                                                    Log.d("Choice cookie", cookie)
-                                                }
+                                                    if (cookie != null) {
+                                                        Log.d("Choice cookie", cookie)
+                                                    }
 
-                                                Log.d("Choice cookie null", cookie + "abc")
+                                                    Log.d("Choice cookie null", cookie + "abc")
 
-                                                if (cookie != "") {
-                                                    val moveInJson =
-                                                        Network.moveIn(id.toInt(), cookie!!)
-                                                    val moveInResponseCode =
-                                                        moveInJson?.get(1)?.toInt()
-                                                    if (moveInResponseCode == 200) {
-                                                        val myRentals = moveInJson?.get(0)
-                                                        CoroutineScope(Dispatchers.Main).launch {
-                                                            loadingDialog.dismissDialog()
-                                                            AlertDialog.Builder(context)
-                                                                .setTitle("Move-in successfully.")
-                                                                .setNeutralButton("Ok", null)
-                                                                .show()
+                                                    if (cookie != "") {
+                                                        val moveInJson =
+                                                            Network.moveIn(id.toInt(), cookie!!)
+                                                        if (moveInJson != null) {
+                                                        val moveInResponseCode =
+                                                            moveInJson?.get(1)?.toInt()
+                                                        if (moveInResponseCode == 200) {
+                                                            val myRentals = moveInJson?.get(0)
+                                                            CoroutineScope(Dispatchers.Main).launch {
+                                                                loadingDialog.dismissDialog()
+                                                                AlertDialog.Builder(context)
+                                                                    .setTitle("Move-in successfully.")
+                                                                    .setNeutralButton("Ok", null)
+                                                                    .show()
 
-                                                            pref.edit().apply {
-                                                                putString(
-                                                                    "myRentalsJson",
-                                                                    myRentals
-                                                                )
-                                                            }.commit()
+                                                                pref.edit().apply {
+                                                                    putString(
+                                                                        "myRentalsJson",
+                                                                        myRentals
+                                                                    )
+                                                                }.commit()
 
-                                                            moveInBtn.text = "Move-out"
+                                                                moveInBtn.text = "Move-out"
 
-                                                            it.findNavController()
-                                                                .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                                it.findNavController()
+                                                                    .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                            }
                                                         }
                                                     } else {
-                                                        CoroutineScope(Dispatchers.Main).launch {
-                                                            loadingDialog.dismissDialog()
-                                                            AlertDialog.Builder(context)
-                                                                .setTitle("Error occured, response code ($moveInResponseCode)")
-                                                                .setNeutralButton("Ok", null)
-                                                                .show()
+                                                            CoroutineScope(Dispatchers.Main).launch {
+                                                                loadingDialog.dismissDialog()
+                                                                AlertDialog.Builder(context)
+                                                                    .setTitle("Error occured")
+                                                                    .setNeutralButton("Ok", null)
+                                                                    .show()
+                                                            }
                                                         }
                                                     }
                                                 }
+                                            } else {
+                                                AlertDialog.Builder(context)
+                                                    .setTitle("Network error")
+                                                    .setMessage("Please enable your network connection")
+                                                    .setNeutralButton("Ok", null)
+                                                    .show()
                                             }
                                         } // A null listener allows the button to dismiss the dialog and take no further action.
                                         .setNegativeButton("No", null)

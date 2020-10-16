@@ -145,15 +145,18 @@ class UserFragment : Fragment() {
         val loadingDialog: LoadingDialog = LoadingDialog(context as Activity)
 
         loginOffBtn.setOnClickListener{
-            loadingDialog.startLoadingDialog()
+
             if (username != "Not yet login") {
+
+                loadingDialog.startLoadingDialog()
 
                 CoroutineScope(Dispatchers.IO).launch {
                     val code = Network.logout("user/logout")
                     Log.d("code", code.toString())
 
-                    if (code != null) {
-
+                    if (code == 500) {
+                        Snackbar.make(view, "Fail to logout, Server error.", Snackbar.LENGTH_LONG).show()
+                    } else if (code != null) {
                         CoroutineScope(Dispatchers.Main).launch {
 
                             val pref: SharedPreferences = context?.getSharedPreferences(
@@ -176,11 +179,14 @@ class UserFragment : Fragment() {
                         Snackbar.make(view, "Fail to logout, please check your internet connection.", Snackbar.LENGTH_LONG).show()
                     }
                 }
+                CoroutineScope(Dispatchers.Main).launch {
+                    loadingDialog.dismissDialog()
+                }
             } else {
                 it.findNavController().navigate(R.id.action_userFragment_to_loginFragment)
             }
-            loadingDialog.dismissDialog()
         }
+
 
         return view
     }

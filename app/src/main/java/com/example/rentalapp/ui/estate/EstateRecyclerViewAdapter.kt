@@ -10,7 +10,6 @@ import androidx.core.os.bundleOf
 import androidx.navigation.findNavController
 import com.example.rentalapp.R
 import com.example.rentalapp.data.Apartment
-import com.example.rentalapp.data.Home
 
 import com.example.rentalapp.ui.estate.dummy.DummyContent.DummyItem
 

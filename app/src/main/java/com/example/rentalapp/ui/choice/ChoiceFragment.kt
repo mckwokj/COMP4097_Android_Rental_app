@@ -166,15 +166,23 @@ class ChoiceFragment : Fragment() {
                                                     try {
                                                         val moveOutJson =
                                                             async {
-                                                                Network.moveOut(
-                                                                    id.toInt(),
-                                                                    cookie!!
-                                                                )
+                                                                try {
+                                                                    Network.moveOut(
+                                                                        id.toInt(),
+                                                                        cookie!!
+                                                                    )
+                                                                } catch (e: Exception) {
+                                                                    null
+                                                                }
                                                             }
 
                                                         withTimeout(5000L) {
                                                             val moveOutResponseCode =
                                                                 moveOutJson.await()?.get(1)?.toInt()
+
+                                                            if (moveOutResponseCode == null) {
+                                                                throw IOException("error")
+                                                            }
 
                                                             if (moveOutResponseCode == 200) {
                                                                 val myRentals =
@@ -313,10 +321,14 @@ class ChoiceFragment : Fragment() {
                                                         try {
                                                             val moveInJson =
                                                                 async {
-                                                                    Network.moveIn(
-                                                                        id.toInt(),
-                                                                        cookie!!
-                                                                    )
+                                                                    try {
+                                                                        Network.moveIn(
+                                                                            id.toInt(),
+                                                                            cookie!!
+                                                                        )
+                                                                    } catch (e: Exception) {
+                                                                        null
+                                                                    }
                                                                 }
                                                             withTimeout(5000L) {
                                                                 if (moveInJson != null) {
@@ -391,6 +403,8 @@ class ChoiceFragment : Fragment() {
                                                                             )
                                                                             .show()
                                                                     }
+                                                                } else {
+                                                                    throw Exception("error")
                                                                 }
                                                             }
                                                         } catch (e: Exception) {

@@ -54,7 +54,7 @@ class Network {
                 var userData: Int = connection.inputStream.read()
 
                 if(connection.responseCode == 200) {
-                    
+
                     while (userData != -1) {
                         builder.append(userData.toChar())
                             userData = connection.inputStream.read()
@@ -119,9 +119,8 @@ class Network {
             try {
                 val connection: HttpURLConnection
 
-                withTimeout(3000L) {
                     connection = URL(URL + "user/rent/$id").openConnection() as HttpURLConnection
-                }
+
                 connection.requestMethod = "DELETE"
                 connection.setRequestProperty("Cookie", cookie)
 

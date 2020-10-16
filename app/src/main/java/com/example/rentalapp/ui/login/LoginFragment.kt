@@ -71,16 +71,20 @@ class LoginFragment : Fragment() {
 
                 try {
                     val loginJson =
+
                         async {
-                            Network.login(
-                                url,
-                                username.text.toString(),
-                                password.text.toString()
-                            )
+                            try {
+                                Network.login(
+                                    url,
+                                    username.text.toString(),
+                                    password.text.toString()
+                                )
+                            } catch (e: Exception) {
+                                null
+                            }
                         }
 
                     withTimeout(5000L) {
-
                         if (loginJson.await() == null) {
                             Snackbar.make(
                                 view,

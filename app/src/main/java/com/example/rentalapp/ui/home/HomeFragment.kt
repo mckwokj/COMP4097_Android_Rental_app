@@ -18,9 +18,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.IOException
 
 
@@ -105,71 +103,76 @@ class HomeFragment : Fragment() {
         val URL = "property/json"
         CoroutineScope(Dispatchers.IO).launch{
             try {
-                val json = Network.getTextFromNetwork(URL)
+                val json = async {
+                    try {
+                        Network.getTextFromNetwork(URL)
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+                withTimeout(5000L) {
+                    if (json.await() != "" && json.await() != null) {
+                        Log.d("HomeFragment rawJson", json.await()!!)
+                        // convert the string json into List<Apartment>
+                        val apartment = Gson().fromJson<List<Apartment>>(json.await(), object :
+                            TypeToken<List<Apartment>>() {}.type)
 
-                if (json != "") {
+                        Log.d("HomeFragment", apartment.toString())
 
-                    Log.d("HomeFragment rawJson", json)
-                    // convert the string json into List<Apartment>
-                    val apartment = Gson().fromJson<List<Apartment>>(json, object :
-                        TypeToken<List<Apartment>>() {}.type)
+                        val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                        Log.d("HomeFragment", "ckpt1")
+                        val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
+                        Log.d("HomeFragment", "ckpt2")
 
-                    Log.d("HomeFragment", apartment.toString())
-
-                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-                    Log.d("HomeFragment", "ckpt1")
-                    val location_dao = AppDatabase.getInstance(requireContext()).locationDao()
-                    Log.d("HomeFragment", "ckpt2")
-
-                    val previousApartments = dao.findAllApartments()
-                    Log.d("HomeFragment", "ckpt3")
+                        val previousApartments = dao.findAllApartments()
+                        Log.d("HomeFragment", "ckpt3")
 
 //                    Log.d("HomeFragment", "chpt3a"+(previousApartments.size!=0).toString())
 
-                    // delete all existing apartments
-                    dao.findAllApartments().forEach{
-                        dao.delete(it)
-                    }
+                        // delete all existing apartments
+                        dao.findAllApartments().forEach {
+                            dao.delete(it)
+                        }
 
-                    Log.d("HomeFragment", "ckpt5")
+                        Log.d("HomeFragment", "ckpt5")
 
-                    Log.d("HomeFragment", dao.findAllApartments().toString())
+                        Log.d("HomeFragment", dao.findAllApartments().toString())
 
-                    apartment.forEach {
-                        Log.d("HomeFragment", it.toString())
-                        dao.insert(it)
-                    }
+                        apartment.forEach {
+                            Log.d("HomeFragment", it.toString())
+                            dao.insert(it)
+                        }
 
-                    CoroutineScope(Dispatchers.Main).launch {
-                        recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
-                        Log.d("HomeFragment", "ckpt7")
-                    }
-                } else {
-                    val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
-                    if (dao.findAllApartments().size == 0) {
-
-                        val apartment = listOf(
-                            Apartment(
-                                -1, "Cannot fetch apartments",
-                                "Please check your network connection", 0, 0,
-                                0, 0, false, null, null,
-                                ""
-                            )
-                        )
                         CoroutineScope(Dispatchers.Main).launch {
                             recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                            Log.d("HomeFragment", "ckpt7")
                         }
                     } else {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            Snackbar.make(
-                                requireView(),
-                                "Fail to grab the latest data. Please check you internet connection.",
-                                Snackbar.LENGTH_LONG
-                            ).show()
+                        val dao = AppDatabase.getInstance(requireContext()).apartmentDao()
+                        if (dao.findAllApartments().size == 0) {
+
+                            val apartment = listOf(
+                                Apartment(
+                                    -1, "Cannot fetch apartments",
+                                    "Please check your network connection", 0, 0,
+                                    0, 0, false, null, null,
+                                    ""
+                                )
+                            )
+                            CoroutineScope(Dispatchers.Main).launch {
+                                recyclerView.adapter = HomeRecyclerViewAdapter(apartment)
+                            }
+                        } else {
+                            CoroutineScope(Dispatchers.Main).launch {
+                                Snackbar.make(
+                                    requireView(),
+                                    "Fail to grab the latest data. Please check you internet connection.",
+                                    Snackbar.LENGTH_LONG
+                                ).show()
+                            }
                         }
                     }
                 }
-
             } catch (e: Exception){
                 Log.d("HomeFragment", "Error in loading data")
                 Log.d("HomeFragment", e.toString())

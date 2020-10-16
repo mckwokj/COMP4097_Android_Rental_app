@@ -106,17 +106,27 @@ class UserFragment : Fragment() {
 
                 CoroutineScope(Dispatchers.IO).launch {
                     val myRentalsJson = Network.getMyRentals(cookie!!)
-                    if (myRentalsJson != null) {
+
+                    if (myRentalsJson == "[]") {
+                        CoroutineScope(Dispatchers.Main).launch {
+                            AlertDialog.Builder(context)
+                                .setTitle("No rental record")
+                                .setMessage("You don't have any rental record.")
+                                .setNeutralButton("Ok", null)
+                                .show()
+                        }
+                    } else if (myRentalsJson != null) {
                         pref.edit().putString("myRentalsJson", myRentalsJson).commit()
 
                         CoroutineScope(Dispatchers.Main).launch {
                             findNavController().navigate(R.id.action_userFragment_to_rentalFragment)
                         }
+
                     } else {
                         CoroutineScope(Dispatchers.Main).launch {
                             AlertDialog.Builder(context)
                                 .setTitle("Network error")
-                                .setMessage("Please enable your network connection")
+                                .setMessage("Please enable your network connection.")
                                 .setNeutralButton("Ok", null)
                                 .show()
                         }

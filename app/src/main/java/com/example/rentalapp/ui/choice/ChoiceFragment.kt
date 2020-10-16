@@ -189,6 +189,24 @@ class ChoiceFragment : Fragment() {
                                                             it.findNavController()
                                                                 .navigate(R.id.action_choiceFragment_to_homeFragment)
                                                         }
+                                                    } else if (moveOutResponseCode == 404) {
+                                                        CoroutineScope(Dispatchers.Main).launch {
+                                                            loadingDialog.dismissDialog()
+                                                            AlertDialog.Builder(context)
+                                                                .setTitle("Move out error")
+                                                                .setMessage("Property not found.")
+                                                                .setNeutralButton("Ok", null)
+                                                                .show()
+                                                        }
+                                                    } else if (moveOutResponseCode == 409) {
+                                                        CoroutineScope(Dispatchers.Main).launch {
+                                                            loadingDialog.dismissDialog()
+                                                            AlertDialog.Builder(context)
+                                                                .setTitle("Move out error")
+                                                                .setMessage("Nothing to delete.")
+                                                                .setNeutralButton("Ok", null)
+                                                                .show()
+                                                        }
                                                     } else {
                                                         CoroutineScope(Dispatchers.Main).launch {
                                                             loadingDialog.dismissDialog()
@@ -293,6 +311,15 @@ class ChoiceFragment : Fragment() {
                                                             CoroutineScope(Dispatchers.Main).launch {
                                                                 AlertDialog.Builder(context)
                                                                     .setTitle("Already full")
+                                                                    .setNeutralButton("Ok", null)
+                                                                    .show()
+                                                            }
+                                                        } else if (moveInResponseCode == 404) {
+                                                            CoroutineScope(Dispatchers.Main).launch {
+                                                                loadingDialog.dismissDialog()
+                                                                AlertDialog.Builder(context)
+                                                                    .setTitle("Move in error")
+                                                                    .setMessage("Property not found.")
                                                                     .setNeutralButton("Ok", null)
                                                                     .show()
                                                             }

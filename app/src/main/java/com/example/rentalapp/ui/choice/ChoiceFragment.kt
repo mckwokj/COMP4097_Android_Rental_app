@@ -28,7 +28,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.*
+import okhttp3.Dispatcher
 import java.io.IOException
+import java.lang.Exception
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -137,10 +139,7 @@ class ChoiceFragment : Fragment() {
                     moveInBtn.text = "Move-out"
 
                     moveInBtn.setOnClickListener {
-//                        val pref: SharedPreferences = context?.getSharedPreferences(
-//                            "userInfo",
-//                            Context.MODE_PRIVATE
-//                        )!!
+
                         val isOnline = isOnline(requireContext())
 
                         if (isOnline!!) {
@@ -164,55 +163,87 @@ class ChoiceFragment : Fragment() {
                                                 Log.d("Choice cookie null", cookie + "abc")
 
                                                 if (cookie != "") {
-                                                    val moveOutJson =
-                                                        Network.moveOut(id.toInt(), cookie!!)
-                                                    val moveOutResponseCode =
-                                                        moveOutJson?.get(1)?.toInt()
-
-                                                    if (moveOutResponseCode == 200) {
-                                                        val myRentals = moveOutJson?.get(0)
-//                                                    dao.updateOccupiedByID(id.toInt(), false)
-                                                        CoroutineScope(Dispatchers.Main).launch {
-                                                            loadingDialog.dismissDialog()
-                                                            AlertDialog.Builder(context)
-                                                                .setTitle("Move-out successfully.")
-                                                                .setNeutralButton("Ok", null)
-                                                                .show()
-
-                                                            pref.edit().apply {
-                                                                putString(
-                                                                    "myRentalsJson",
-                                                                    myRentals
+                                                    try {
+                                                        val moveOutJson =
+                                                            async {
+                                                                Network.moveOut(
+                                                                    id.toInt(),
+                                                                    cookie!!
                                                                 )
-                                                            }.apply()
+                                                            }
 
-                                                            it.findNavController()
-                                                                .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                        withTimeout(5000L) {
+                                                            val moveOutResponseCode =
+                                                                moveOutJson.await()?.get(1)?.toInt()
+
+                                                            if (moveOutResponseCode == 200) {
+                                                                val myRentals =
+                                                                    moveOutJson.await()?.get(0)
+//                                                    dao.updateOccupiedByID(id.toInt(), false)
+                                                                CoroutineScope(Dispatchers.Main).launch {
+                                                                    loadingDialog.dismissDialog()
+                                                                    AlertDialog.Builder(context)
+                                                                        .setTitle("Move-out successfully.")
+                                                                        .setNeutralButton(
+                                                                            "Ok",
+                                                                            null
+                                                                        )
+                                                                        .show()
+
+                                                                    pref.edit().apply {
+                                                                        putString(
+                                                                            "myRentalsJson",
+                                                                            myRentals
+                                                                        )
+                                                                    }.apply()
+
+                                                                    it.findNavController()
+                                                                        .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                                }
+                                                            } else if (moveOutResponseCode == 404) {
+                                                                CoroutineScope(Dispatchers.Main).launch {
+                                                                    loadingDialog.dismissDialog()
+                                                                    AlertDialog.Builder(context)
+                                                                        .setTitle("Move out error")
+                                                                        .setMessage("Property not found.")
+                                                                        .setNeutralButton(
+                                                                            "Ok",
+                                                                            null
+                                                                        )
+                                                                        .show()
+                                                                }
+                                                            } else if (moveOutResponseCode == 409) {
+                                                                CoroutineScope(Dispatchers.Main).launch {
+                                                                    loadingDialog.dismissDialog()
+                                                                    AlertDialog.Builder(context)
+                                                                        .setTitle("Move out error")
+                                                                        .setMessage("Nothing to delete.")
+                                                                        .setNeutralButton(
+                                                                            "Ok",
+                                                                            null
+                                                                        )
+                                                                        .show()
+                                                                }
+                                                            } else {
+                                                                CoroutineScope(Dispatchers.Main).launch {
+                                                                    loadingDialog.dismissDialog()
+                                                                    AlertDialog.Builder(context)
+                                                                        .setTitle("Move out error")
+                                                                        .setMessage("Please try again.")
+                                                                        .setNeutralButton(
+                                                                            "Ok",
+                                                                            null
+                                                                        )
+                                                                        .show()
+                                                                }
+                                                            }
                                                         }
-                                                    } else if (moveOutResponseCode == 404) {
+                                                    } catch (e: Exception) {
                                                         CoroutineScope(Dispatchers.Main).launch {
                                                             loadingDialog.dismissDialog()
                                                             AlertDialog.Builder(context)
                                                                 .setTitle("Move out error")
-                                                                .setMessage("Property not found.")
-                                                                .setNeutralButton("Ok", null)
-                                                                .show()
-                                                        }
-                                                    } else if (moveOutResponseCode == 409) {
-                                                        CoroutineScope(Dispatchers.Main).launch {
-                                                            loadingDialog.dismissDialog()
-                                                            AlertDialog.Builder(context)
-                                                                .setTitle("Move out error")
-                                                                .setMessage("Nothing to delete.")
-                                                                .setNeutralButton("Ok", null)
-                                                                .show()
-                                                        }
-                                                    } else {
-                                                        CoroutineScope(Dispatchers.Main).launch {
-                                                            loadingDialog.dismissDialog()
-                                                            AlertDialog.Builder(context)
-                                                                .setTitle("Network error")
-                                                                .setMessage("Please enable your network connection")
+                                                                .setMessage("Please try again.")
                                                                 .setNeutralButton("Ok", null)
                                                                 .show()
                                                         }
@@ -279,58 +310,98 @@ class ChoiceFragment : Fragment() {
                                                     Log.d("Choice cookie null", cookie + "abc")
 
                                                     if (cookie != "") {
-                                                        val moveInJson =
-                                                            Network.moveIn(id.toInt(), cookie!!)
-                                                        if (moveInJson != null) {
-                                                        val moveInResponseCode =
-                                                            moveInJson?.get(1)?.toInt()
-
-                                                        if (moveInResponseCode == 200) {
-                                                            val myRentals = moveInJson?.get(0)
-                                                            CoroutineScope(Dispatchers.Main).launch {
-                                                                loadingDialog.dismissDialog()
-                                                                AlertDialog.Builder(context)
-                                                                    .setTitle("Move-in successfully.")
-                                                                    .setNeutralButton("Ok", null)
-                                                                    .show()
-
-                                                                pref.edit().apply {
-                                                                    putString(
-                                                                        "myRentalsJson",
-                                                                        myRentals
+                                                        try {
+                                                            val moveInJson =
+                                                                async {
+                                                                    Network.moveIn(
+                                                                        id.toInt(),
+                                                                        cookie!!
                                                                     )
-                                                                }.commit()
+                                                                }
+                                                            withTimeout(5000L) {
+                                                                if (moveInJson != null) {
+                                                                    val moveInResponseCode =
+                                                                        moveInJson.await()?.get(1)
+                                                                            ?.toInt()
 
-                                                                moveInBtn.text = "Move-out"
+                                                                    if (moveInResponseCode == 200) {
+                                                                        val myRentals =
+                                                                            moveInJson.await()
+                                                                                ?.get(0)
+                                                                        CoroutineScope(Dispatchers.Main).launch {
+                                                                            loadingDialog.dismissDialog()
+                                                                            AlertDialog.Builder(
+                                                                                context
+                                                                            )
+                                                                                .setTitle("Move-in successfully.")
+                                                                                .setNeutralButton(
+                                                                                    "Ok",
+                                                                                    null
+                                                                                )
+                                                                                .show()
 
-                                                                it.findNavController()
-                                                                    .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                                            pref.edit().apply {
+                                                                                putString(
+                                                                                    "myRentalsJson",
+                                                                                    myRentals
+                                                                                )
+                                                                            }.commit()
+
+                                                                            moveInBtn.text =
+                                                                                "Move-out"
+
+                                                                            it.findNavController()
+                                                                                .navigate(R.id.action_choiceFragment_to_homeFragment)
+                                                                        }
+                                                                    } else if (moveInResponseCode == 422) {
+                                                                        loadingDialog.dismissDialog()
+                                                                        CoroutineScope(Dispatchers.Main).launch {
+                                                                            AlertDialog.Builder(
+                                                                                context
+                                                                            )
+                                                                                .setTitle("Already full")
+                                                                                .setNeutralButton(
+                                                                                    "Ok",
+                                                                                    null
+                                                                                )
+                                                                                .show()
+                                                                        }
+                                                                    } else if (moveInResponseCode == 404) {
+                                                                        CoroutineScope(Dispatchers.Main).launch {
+                                                                            loadingDialog.dismissDialog()
+                                                                            AlertDialog.Builder(
+                                                                                context
+                                                                            )
+                                                                                .setTitle("Move in error")
+                                                                                .setMessage("Property not found.")
+                                                                                .setNeutralButton(
+                                                                                    "Ok",
+                                                                                    null
+                                                                                )
+                                                                                .show()
+                                                                        }
+                                                                    } else {
+                                                                        loadingDialog.dismissDialog()
+                                                                        AlertDialog.Builder(context)
+                                                                            .setTitle("Connection problem")
+                                                                            .setMessage("Please try again.")
+                                                                            .setNeutralButton(
+                                                                                "Ok",
+                                                                                null
+                                                                            )
+                                                                            .show()
+                                                                    }
+                                                                }
                                                             }
-                                                        } else if (moveInResponseCode == 422) {
-                                                            loadingDialog.dismissDialog()
-                                                            CoroutineScope(Dispatchers.Main).launch {
-                                                                AlertDialog.Builder(context)
-                                                                    .setTitle("Already full")
-                                                                    .setNeutralButton("Ok", null)
-                                                                    .show()
-                                                            }
-                                                        } else if (moveInResponseCode == 404) {
+                                                        } catch (e: Exception) {
                                                             CoroutineScope(Dispatchers.Main).launch {
                                                                 loadingDialog.dismissDialog()
                                                                 AlertDialog.Builder(context)
-                                                                    .setTitle("Move in error")
-                                                                    .setMessage("Property not found.")
+                                                                    .setTitle("Move in Error")
+                                                                    .setMessage("Please try again.")
                                                                     .setNeutralButton("Ok", null)
                                                                     .show()
-                                                            }
-                                                        }
-                                                    } else {
-                                                            CoroutineScope(Dispatchers.Main).launch {
-                                                                loadingDialog.dismissDialog()
-                                                                AlertDialog.Builder(context)
-                                                                    .setTitle("Error occured")
-                                                                    .setNeutralButton("Ok", null)
-                                                                    .show()
+                                                                e.printStackTrace()
                                                             }
                                                         }
                                                     }

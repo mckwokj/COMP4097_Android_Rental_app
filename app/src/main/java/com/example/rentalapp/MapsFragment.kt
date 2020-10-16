@@ -21,6 +21,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -127,6 +128,7 @@ class MapsFragment : Fragment() {
             p1 = LatLng(location.latitude, location.longitude)
         } catch (ex: IOException) {
             ex.printStackTrace()
+            Snackbar.make(requireView(), "grpc failed", Snackbar.LENGTH_LONG).show()
         }
         return p1
     }

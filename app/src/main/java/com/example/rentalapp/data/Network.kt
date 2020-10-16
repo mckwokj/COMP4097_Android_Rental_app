@@ -5,6 +5,8 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
 import java.net.HttpCookie
@@ -52,9 +54,10 @@ class Network {
                 var userData: Int = connection.inputStream.read()
 
                 if(connection.responseCode == 200) {
+                    
                     while (userData != -1) {
                         builder.append(userData.toChar())
-                        userData = connection.inputStream.read()
+                            userData = connection.inputStream.read()
                     }
                     Log.d("Network", "Finish reading: ${connection.responseCode}")
 

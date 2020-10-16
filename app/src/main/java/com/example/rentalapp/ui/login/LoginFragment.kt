@@ -71,13 +71,16 @@ class LoginFragment : Fragment() {
                 CoroutineScope(Dispatchers.IO).launch {
                     val loginJson = Network.login(url, username.text.toString(), password.text.toString())
 
-                    Log.d("LoginFragment json", loginJson.toString())
+                     if (loginJson == null) {
+                         Snackbar.make(view, "Fail to login, Please check your internet connection.", Snackbar.LENGTH_LONG).show()
+                     } else if (loginJson?.size != 1) {
+                        Log.d("LoginFragment json", loginJson.toString())
 
-                    val user = Gson().fromJson<User>(loginJson?.get(0), object:
-                        TypeToken<User>() {}.type)
+                        val user = Gson().fromJson<User>(loginJson?.get(0), object:
+                            TypeToken<User>() {}.type)
 
-                    // login successfully
-                    if (loginJson != null) {
+                        Log.d("LoginFragment size", loginJson.toString())
+
                         val cookie = loginJson!!.get(1)
                         Log.d("LoginFragment cookie", cookie)
                         val myRentalsJson = loginJson!!.get(2)
@@ -103,8 +106,16 @@ class LoginFragment : Fragment() {
                         }
                     }
                     // fail to login
-                    else {
-                        Snackbar.make(view, "Fail to login.", Snackbar.LENGTH_LONG).show()
+                    else if (loginJson?.size == 1) {
+//                        Log.d("LoginFragment", loginJson.toString())
+                        val responseCode = loginJson.get(0).toInt()
+
+                        if (responseCode == 401)
+                            Snackbar.make(view, "Fail to login, User not found or Wrong Password.", Snackbar.LENGTH_LONG).show()
+                        else if (responseCode == 400)
+                            Snackbar.make(view, "Fail to login, Bad Request.", Snackbar.LENGTH_LONG).show()
+                        else if (responseCode == 500)
+                            Snackbar.make(view, "Fail to login, Server Error.", Snackbar.LENGTH_LONG).show()
                     }
                     loadingDialog.dismissDialog()
                 }

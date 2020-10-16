@@ -288,7 +288,7 @@ class ChoiceFragment : Fragment() {
                                                                 it.findNavController()
                                                                     .navigate(R.id.action_choiceFragment_to_homeFragment)
                                                             }
-                                                        } else if (moveInResponseCode == 400) {
+                                                        } else if (moveInResponseCode == 422) {
                                                             loadingDialog.dismissDialog()
                                                             CoroutineScope(Dispatchers.Main).launch {
                                                                 AlertDialog.Builder(context)

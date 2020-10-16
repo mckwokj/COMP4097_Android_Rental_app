@@ -10,6 +10,7 @@ import java.io.IOException
 import java.net.HttpCookie
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.UnknownHostException
 
 class Network {
     companion object{
@@ -33,9 +34,10 @@ class Network {
         }
 
         suspend fun login(url: String, username: String, password: String): List<String>?{
+            var connection: HttpURLConnection? = null
             try {
                 val builder = StringBuilder()
-                val connection = URL(URL+url).openConnection() as HttpURLConnection
+                connection = URL(URL+url).openConnection() as HttpURLConnection
                 connection.requestMethod = "POST"
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded")
@@ -63,11 +65,13 @@ class Network {
 
                     return listOf(builder.toString(), cookie, myRentalJson!!)
                 }
-
+            } catch (e: UnknownHostException) {
+                Log.d("You have an exception", e.toString())
+                return null
             } catch (e: Exception) {
                 Log.d("You have an exception", e.toString())
             }
-            return null
+            return listOf(connection?.responseCode.toString())
         }
 
         suspend fun logout(url: String): Int?{
